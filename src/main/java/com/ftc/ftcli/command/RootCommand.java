@@ -1,6 +1,6 @@
 package com.ftc.ftcli.command;
 
-import com.ftc.ftcli.command.ai.LocalAICommand;
+import com.ftc.ftcli.command.ai.AICommand;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
@@ -17,7 +17,7 @@ import java.util.concurrent.Callable;
         mixinStandardHelpOptions = true,
         version = "1.0",
         description = "ftc自己的命令行工具",
-        subcommands = {LocalAICommand.class}
+        subcommands = {AICommand.class}
 )
 public class RootCommand implements Callable<Integer> {
 

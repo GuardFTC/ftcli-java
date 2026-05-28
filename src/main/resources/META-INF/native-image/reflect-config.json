@@ -18,7 +18,7 @@
     "allDeclaredConstructors": true
   },
   {
-    "name": "com.ftc.ftcli.command.ai.LocalAICommand",
+    "name": "com.ftc.ftcli.command.ai.AICommand",
     "allDeclaredFields": true,
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true

@@ -7,6 +7,7 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.openai.OpenAiTokenCountEstimator;
 import dev.langchain4j.service.AiServices;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -17,6 +18,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @RequiredArgsConstructor
+@EnableConfigurationProperties(AiChatMemoryProperties.class)
 public class AiAssistantConfig {
 
     /**
@@ -30,6 +32,11 @@ public class AiAssistantConfig {
     private final RedisChatMemoryStore redisChatMemoryStore;
 
     /**
+     * AI聊天记忆配置属性
+     */
+    private final AiChatMemoryProperties aiChatMemoryProperties;
+
+    /**
      * 创建Web问答服务
      *
      * @return webAiService
@@ -40,7 +47,7 @@ public class AiAssistantConfig {
                 .chatModel(model)
                 .chatMemoryProvider(memoryId -> TokenWindowChatMemory.builder()
                         .id(memoryId)
-                        .maxTokens(95000, new OpenAiTokenCountEstimator("gpt-4o"))
+                        .maxTokens(aiChatMemoryProperties.getMaxTokens(), new OpenAiTokenCountEstimator(aiChatMemoryProperties.getTokenEstimatorModel()))
                         .chatMemoryStore(redisChatMemoryStore)
                         .build())
                 .build();

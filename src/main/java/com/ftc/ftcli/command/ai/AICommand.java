@@ -16,7 +16,7 @@ import java.util.concurrent.Callable;
 @Component
 @RequiredArgsConstructor
 @CommandLine.Command(name = "ai", description = "基于DeepSeek进行AI问答", mixinStandardHelpOptions = true)
-public class LocalAICommand implements Callable<Integer> {
+public class AICommand implements Callable<Integer> {
 
     //-----------------------------------------命令行参数相关-----------------------------------//
     @CommandLine.Option(names = {"-l", "--local"}, description = "基于本地文库进行回答")

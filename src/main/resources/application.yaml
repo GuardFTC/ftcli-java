@@ -48,3 +48,9 @@ langchain4j:
 logging:
   level:
     root: WARN  #只输出警告及以上级别
+
+#AI配置
+ai:
+  chat-memory:
+    max-tokens: 95000
+    token-estimator-model: gpt-4o
