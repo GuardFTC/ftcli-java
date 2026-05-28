@@ -147,6 +147,7 @@
                     <imageName>ftcli-java</imageName>
                     <buildArgs>
                         <buildArg>--no-fallback</buildArg>
+                        <buildArg>--initialize-at-build-time=com.alibaba.fastjson2.introspect.PropertyAccessorFactoryLambda,com.alibaba.fastjson2.introspect.PropertyAccessorFactoryUnsafe</buildArg>
                     </buildArgs>
                 </configuration>
             </plugin>
