@@ -15,9 +15,9 @@ public interface WebAiService {
     /**
      * 聊天
      *
-     * @param memoryId    会话ID
+     * @param userId      用户ID
      * @param userMessage 用户消息
      * @return 响应结果
      */
-    String chat(@MemoryId int memoryId, @UserMessage String userMessage);
+    String chat(@MemoryId String userId, @UserMessage String userMessage);
 }
