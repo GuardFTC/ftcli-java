@@ -1,6 +1,7 @@
 package com.ftc.ftcli.command.ai;
 
-import com.ftc.ftcli.service.GreetService;
+import cn.hutool.core.util.StrUtil;
+import com.ftc.ftcli.ai.LocalAiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
@@ -29,12 +30,23 @@ public class LocalAICommand implements Callable<Integer> {
     @CommandLine.Option(names = {"-uf", "--update-file"}, description = "更新文库文件路径")
     private String updateFilePath;
 
-    private GreetService greetService;
+    private final LocalAiService localAiService;
 
     @Override
     public Integer call() {
-        System.out.println("localUserMessage:" + localUserMessage);
-        System.out.println("webUserMessage:" + webUserMessage);
+
+        //1.如果基于本地文库进行回答
+        if (StrUtil.isNotBlank(localUserMessage)) {
+
+            //1.打印用户信息
+            System.out.println("user: " + localUserMessage);
+
+            //2.调用AI服务获取回答
+            String aiResponse = localAiService.chat(userId, localUserMessage);
+
+            //3.打印AI回答
+            System.out.println("ai: " + aiResponse);
+        }
         return 0;
     }
 }
