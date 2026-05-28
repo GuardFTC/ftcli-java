@@ -24,7 +24,7 @@
     "allDeclaredConstructors": true
   },
   {
-    "name": "com.ftc.ftcli.properties.AiChatMemoryProperties",
+    "name": "com.ftc.ftcli.ai.properties.AiChatMemoryProperties",
     "allDeclaredFields": true,
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true

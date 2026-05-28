@@ -1,4 +1,4 @@
-package com.ftc.ftcli.config.ai;
+package com.ftc.ftcli.ai.config;
 
 import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
