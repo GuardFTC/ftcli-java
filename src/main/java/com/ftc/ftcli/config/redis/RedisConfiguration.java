@@ -1,4 +1,4 @@
-package com.ftc.ftcli.config;
+package com.ftc.ftcli.config.redis;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;

@@ -1,7 +1,10 @@
-package com.ftc.ftcli.ai.tool.spec;
+package com.ftc.ftcli.infra;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
+import com.ftc.ftcli.ai.tool.spec.ToolParamTypeEnum;
+import com.ftc.ftcli.ai.tool.spec.ToolSpecEntity;
+import com.ftc.ftcli.ai.tool.spec.ToolSpecParamEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;

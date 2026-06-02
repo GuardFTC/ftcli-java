@@ -1,4 +1,4 @@
-package com.ftc.ftcli.ai.properties;
+package com.ftc.ftcli.properties;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

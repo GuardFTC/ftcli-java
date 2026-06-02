@@ -1,6 +1,6 @@
-package com.ftc.ftcli.ai.config;
+package com.ftc.ftcli.config.ai;
 
-import com.ftc.ftcli.ai.properties.WebSearchProperties;
+import com.ftc.ftcli.properties.WebSearchProperties;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.rag.content.retriever.WebSearchContentRetriever;

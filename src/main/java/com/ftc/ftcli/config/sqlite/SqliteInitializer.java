@@ -1,4 +1,4 @@
-package com.ftc.ftcli.config;
+package com.ftc.ftcli.config.sqlite;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

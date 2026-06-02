@@ -6,7 +6,7 @@ import com.ftc.ftcli.ai.tool.provider.IToolProvider;
 import com.ftc.ftcli.ai.tool.provider.ToolProviderFactory;
 import com.ftc.ftcli.ai.tool.spec.ToolSpecBuilder;
 import com.ftc.ftcli.ai.tool.spec.ToolSpecEntity;
-import com.ftc.ftcli.ai.tool.spec.ToolSpecRepository;
+import com.ftc.ftcli.infra.ToolSpecRepository;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.service.tool.ToolProvider;
