@@ -1,4 +1,4 @@
-package com.ftc.ftcli.ai.service;
+package com.ftc.ftcli.ai.assistant;
 
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.SystemMessage;
@@ -14,10 +14,10 @@ public interface WebAiService {
     /**
      * 聊天
      *
-     * @param userId      用户ID
+     * @param chatId      会话ID
      * @param userMessage 用户消息
      * @return 响应结果
      */
     @SystemMessage(fromResource = "prompt/web-service.markdown")
-    String chat(@MemoryId String userId, @UserMessage String userMessage);
+    String chat(@MemoryId String chatId, @UserMessage String userMessage);
 }

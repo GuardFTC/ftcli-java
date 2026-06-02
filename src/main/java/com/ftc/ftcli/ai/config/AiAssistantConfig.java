@@ -1,7 +1,7 @@
 package com.ftc.ftcli.config.ai;
 
 import com.ftc.ftcli.ai.properties.ChatMemoryProperties;
-import com.ftc.ftcli.ai.service.WebAiService;
+import com.ftc.ftcli.ai.assistant.WebAiService;
 import com.ftc.ftcli.ai.infra.RedisChatMemoryStore;
 import dev.langchain4j.memory.chat.TokenWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;

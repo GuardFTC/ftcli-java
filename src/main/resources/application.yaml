@@ -49,6 +49,14 @@ logging:
   level:
     root: INFO  #只输出警告及以上级别
 
+#swagger配置
+swagger:
+  enabled: true
+  title: 'ftcli API'
+  description: "ftcli API"
+  version: '1.0'
+  base-package: com.ftc.ftcli
+
 #AI配置
 ai:
   chat-memory:

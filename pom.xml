@@ -61,6 +61,13 @@
             <version>${langchain4j.version}</version>
         </dependency>
 
+        <!-- springdoc-openapi-ui依赖 -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>3.0.3</version>
+        </dependency>
+
         <!-- hutool依赖 -->
         <dependency>
             <groupId>cn.hutool</groupId>
