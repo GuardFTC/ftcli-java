@@ -1,17 +1,20 @@
 package com.ftc.ftcli.ai.config;
 
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.rag.content.retriever.WebSearchContentRetriever;
+import dev.langchain4j.rag.query.router.LanguageModelQueryRouter;
 import dev.langchain4j.rag.query.router.QueryRouter;
+import dev.langchain4j.rag.query.transformer.CompressingQueryTransformer;
+import dev.langchain4j.rag.query.transformer.QueryTransformer;
 import dev.langchain4j.web.search.WebSearchEngine;
 import dev.langchain4j.web.search.tavily.TavilyWebSearchEngine;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.regex.Pattern;
+import java.util.Map;
 
 /**
  * @author 冯铁城 [17615007230@163.com]
@@ -20,7 +23,15 @@ import java.util.regex.Pattern;
  */
 @Slf4j
 @Configuration
+@RequiredArgsConstructor
 public class RagConfig {
+
+    private final ChatModel model;
+
+    @Bean
+    public QueryTransformer queryTransformer() {
+        return new CompressingQueryTransformer(model);
+    }
 
     @Bean
     public QueryRouter webAiQueryRouter() {
@@ -36,34 +47,9 @@ public class RagConfig {
                 .maxResults(3)
                 .build();
 
-        //3.预编译“必须联网”的特征词正则表达式（放入外部或静态预编译性能更佳）
-        //包含了：时效性词汇、实时数据词汇、以及近几年的年份（动态追踪最新事件）
-        Pattern webSearchPattern = Pattern.compile(
-                ".*(最新|新闻|今天|今年|时事|天气|股价|股票|实时|上线|发布|开源|官网|怎么下载|哪里买|发生什么).*|.*(\\b(202[4-6])\\b).*",
-                Pattern.CASE_INSENSITIVE
-        );
-
-        //4.返回确定性的路由逻辑
-        return query -> {
-
-            //5.获取查询文本
-            String queryText = query.text().trim();
-
-            //6.如果用户在前端输入了 `/search`、`/web`，或者话里带有“上网查查”，直接无条件触发联网
-            if (queryText.startsWith("/search") || queryText.startsWith("/web") || queryText.contains("上网查")) {
-                log.info("[Router] 匹配到 /search 或 /web，开启网络检索");
-                return List.of(webSearchContentRetriever);
-            }
-
-            //7.策略B：时效性与网络特征词自动匹配
-            if (webSearchPattern.matcher(queryText).matches()) {
-                log.info("[Router] 匹配到时效性或网络特征词，开启网络检索");
-                return List.of(webSearchContentRetriever);
-            }
-
-            //8.策略C：不满足以上条件（如：日常闲聊、写个Java单例、翻译句子、纯文本创作等）
-            log.info("[Router] 无需联网：直接让 LLM 自身能力回答（零延迟/零API消耗）");
-            return Collections.emptyList();
-        };
+        //3.使用LLM路由：由模型自行判断用户问题是否需要联网检索，替代正则匹配
+        return new LanguageModelQueryRouter(model, Map.of(
+                webSearchContentRetriever, "用于查询实时信息、最新新闻、时事热点、技术框架最新版本、产品价格、赛事结果等需要联网获取的动态内容。不要用于回答编程概念、语法规则、设计模式等稳定的知识性问题。"
+        ));
     }
 }

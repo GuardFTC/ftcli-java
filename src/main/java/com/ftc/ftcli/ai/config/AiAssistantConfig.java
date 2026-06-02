@@ -8,6 +8,7 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.openai.OpenAiTokenCountEstimator;
 import dev.langchain4j.rag.DefaultRetrievalAugmentor;
 import dev.langchain4j.rag.query.router.QueryRouter;
+import dev.langchain4j.rag.query.transformer.QueryTransformer;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolProvider;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,8 @@ public class AiAssistantConfig {
 
     private final QueryRouter webAiQueryRouter;
 
+    private final QueryTransformer queryTransformer;
+
     /**
      * 创建Web问答服务
      *
@@ -53,6 +56,7 @@ public class AiAssistantConfig {
                         .build())
                 .toolProvider(toolProvider)
                 .retrievalAugmentor(DefaultRetrievalAugmentor.builder()
+                        .queryTransformer(queryTransformer)
                         .queryRouter(webAiQueryRouter)
                         .build())
                 .build();
