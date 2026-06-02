@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -59,6 +60,106 @@ public class ToolSpecRepository {
                     .params(params)
                     .build();
         }).toList();
+    }
+
+    /**
+     * 根据工具名称判断工具是否存在
+     *
+     * @param name 工具名称
+     * @return 是否存在
+     */
+    public boolean existsByName(String name) {
+
+        //1.定义SQL
+        String sql = "SELECT COUNT(*) FROM tool_spec WHERE name = ?";
+
+        //2.执行SQL
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, name);
+
+        //3.判断是否存在
+        return count != null && count > 0;
+    }
+
+    /**
+     * 新增工具规格（含参数）
+     *
+     * @param entity 工具规格实体
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public Long save(ToolSpecEntity entity) {
+
+        //1.定义插入工具表SQL
+        String insertToolSql = "INSERT INTO tool_spec (name, description, type) VALUES (?, ?, ?)";
+
+        //2.执行插入工具表SQL
+        jdbcTemplate.update(insertToolSql, entity.getName(), entity.getDescription(), entity.getType());
+
+        //3.查询刚插入的工具ID
+        Long toolId = jdbcTemplate.queryForObject("SELECT last_insert_rowid()", Long.class);
+
+        //4.如果参数不为空，则插入参数
+        if (CollUtil.isNotEmpty(entity.getParams())) {
+
+            //5.定义插入参数表SQL
+            String insertParamSql = "INSERT INTO tool_spec_param (tool_spec_id, name, description, required, type, enum_values) VALUES (?, ?, ?, ?, ?, ?)";
+
+            //6.遍历插入参数
+            for (ToolSpecParamEntity param : entity.getParams()) {
+
+                //7.如果存在枚举值，则转换为字符串
+                String enumValues = CollUtil.isNotEmpty(param.getEnumValues())
+                        ? String.join(",", param.getEnumValues())
+                        : null;
+
+                //8.执行插入参数表SQL
+                jdbcTemplate.update(insertParamSql,
+                        toolId,
+                        param.getName(),
+                        param.getDescription(),
+                        param.isRequired() ? 1 : 0,
+                        param.getType().name().toLowerCase(),
+                        enumValues
+                );
+            }
+        }
+
+        //9.返回工具ID
+        return toolId;
+    }
+
+    /**
+     * 根据工具名称删除工具规格（含参数）
+     *
+     * @param name 工具名称
+     * @return 是否删除成功（工具是否存在）
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public boolean deleteByName(String name) {
+
+        //1.定义查询工具SQL
+        String selectToolSql = "SELECT id FROM tool_spec WHERE name = ?";
+
+        //2.查询工具ID
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(selectToolSql, name);
+
+        //3.工具不存在
+        if (CollUtil.isEmpty(rows)) {
+            return false;
+        }
+
+        //4.获取工具ID
+        Long toolId = ((Number) rows.get(0).get("id")).longValue();
+
+        //5.先删除参数
+        String deleteParamSql = "DELETE FROM tool_spec_param WHERE tool_spec_id = ?";
+        jdbcTemplate.update(deleteParamSql, toolId);
+
+        //6.再删除工具
+        String deleteToolSql = "DELETE FROM tool_spec WHERE id = ?";
+        jdbcTemplate.update(deleteToolSql, toolId);
+
+        //7.返回
+        return true;
     }
 
     /**
