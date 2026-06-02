@@ -38,6 +38,13 @@ public class AIChatController {
     @PostMapping("/chat")
     @Operation(summary = "AI聊天")
     public RestfulResult<String> chat(@RequestBody ChatPayload payload) {
-        return null;
+        log.info("[AI] 聊天 入参:[{}]", payload);
+
+        //1.进行聊天
+        String aiResponse = aiChatService.chat(payload);
+        log.info("[AI] 聊天 出参:[{}]", aiResponse);
+
+        //2.返回
+        return RestfulResult.Success.getOrUpdateData(aiResponse);
     }
 }

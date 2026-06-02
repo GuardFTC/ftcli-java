@@ -1,6 +1,7 @@
 package com.ftc.ftcli.ai.assistant;
 
 import dev.langchain4j.service.MemoryId;
+import dev.langchain4j.service.Result;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 
@@ -19,5 +20,5 @@ public interface WebAiService {
      * @return 响应结果
      */
     @SystemMessage(fromResource = "prompt/web-service.markdown")
-    String chat(@MemoryId String chatId, @UserMessage String userMessage);
+    Result<String> chat(@MemoryId String chatId, @UserMessage String userMessage);
 }
