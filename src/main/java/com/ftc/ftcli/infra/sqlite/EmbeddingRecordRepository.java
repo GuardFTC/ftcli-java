@@ -6,11 +6,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -43,94 +44,109 @@ public class EmbeddingRecordRepository {
             return Collections.emptyList();
         }
 
-        //4.映射
+        //4.映射返回
         return rows.stream().map(this::mapRowToEntity).toList();
     }
 
     /**
-     * 根据文件名MD5查询单条记录
+     * 根据文件名MD5集合查询已存在的记录
      *
-     * @param fileNameMd5 文件名MD5
-     * @return 记录实体，不存在则返回null
+     * @param fileNameMd5List 文件名MD5集合
+     * @return 已存在的记录列表
      */
-    public EmbeddingRecordEntity findByFileNameMd5(String fileNameMd5) {
-
-        //1.定义SQL
-        String sql = "SELECT id, file_name, file_path, file_name_md5, file_content_md5, created_at, updated_at FROM embedding_record WHERE file_name_md5 = ?";
-
-        //2.查询
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, fileNameMd5);
-
-        //3.判空
-        if (CollUtil.isEmpty(rows)) {
-            return null;
-        }
-
-        //4.返回
-        return mapRowToEntity(rows.get(0));
-    }
-
-    /**
-     * 新增记录
-     *
-     * @param entity 记录实体
-     */
-    public void save(EmbeddingRecordEntity entity) {
-
-        //1.定义保存SQL
-        String sql = "INSERT INTO embedding_record (file_name, file_path, file_name_md5, file_content_md5) VALUES (?, ?, ?, ?)";
-
-        //2.保存
-        jdbcTemplate.update(sql, entity.getFileName(), entity.getFilePath(), entity.getFileNameMd5(), entity.getFileContentMd5());
-    }
-
-    /**
-     * 更新文件内容MD5（文档内容变更时调用）
-     *
-     * @param fileNameMd5   文件名MD5
-     * @param newContentMd5 新的文件内容MD5
-     */
-    public void updateContentMd5(String fileNameMd5, String newContentMd5) {
-
-        //1.定义更新SQL
-        String sql = "UPDATE embedding_record SET file_content_md5 = ?, updated_at = datetime('now', 'localtime') WHERE file_name_md5 = ?";
-
-        //2.更新
-        jdbcTemplate.update(sql, newContentMd5, fileNameMd5);
-    }
-
-    /**
-     * 批量过滤，返回库中不存在的文件名MD5集合（用于批量embedding时筛出新文档）
-     *
-     * @param fileNameMd5List 待检查的文件名MD5列表
-     * @return 库中不存在的MD5集合（即新文档）
-     */
-    public Set<String> batchFilterNew(List<String> fileNameMd5List) {
+    public List<EmbeddingRecordEntity> findAllByMd5(List<String> fileNameMd5List) {
 
         //1.判空
         if (CollUtil.isEmpty(fileNameMd5List)) {
-            return Collections.emptySet();
+            return Collections.emptyList();
         }
 
-        //2.构建IN查询的占位符SQL
+        //2.构建IN查询占位符
         String placeholders = fileNameMd5List.stream().map(s -> "?").collect(Collectors.joining(","));
-        String sql = "SELECT file_name_md5 FROM embedding_record WHERE file_name_md5 IN (" + placeholders + ")";
+        String sql = "SELECT id, file_name, file_path, file_name_md5, file_content_md5, created_at, updated_at FROM embedding_record WHERE file_name_md5 IN (" + placeholders + ")";
 
-        //3.查询已存在的MD5
-        List<String> existingMd5List = jdbcTemplate.queryForList(sql, String.class, fileNameMd5List.toArray());
+        //3.查询
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, fileNameMd5List.toArray());
 
-        //4.用Set做差集，返回不存在的部分
-        Set<String> existingSet = Set.copyOf(existingMd5List);
-        return fileNameMd5List.stream()
-                .filter(md5 -> !existingSet.contains(md5))
-                .collect(Collectors.toSet());
+        //4.判空
+        if (CollUtil.isEmpty(rows)) {
+            return Collections.emptyList();
+        }
+
+        //5.映射返回
+        return rows.stream().map(this::mapRowToEntity).toList();
+    }
+
+    /**
+     * 批量保存新增的文档记录
+     *
+     * @param entities 待保存的记录集合
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void saveBatch(List<EmbeddingRecordEntity> entities) {
+
+        //1.判空
+        if (CollUtil.isEmpty(entities)) {
+            return;
+        }
+
+        //2.构建多行VALUES的批量INSERT SQL
+        StringBuilder sql = new StringBuilder("INSERT INTO embedding_record (file_name, file_path, file_name_md5, file_content_md5) VALUES ");
+        List<Object> params = new ArrayList<>();
+
+        //3.遍历拼接
+        for (int i = 0; i < entities.size(); i++) {
+
+            //4.获取待保存的记录
+            EmbeddingRecordEntity entity = entities.get(i);
+
+            //5.如果不是第一行,拼接,
+            if (i > 0) {
+                sql.append(",");
+            }
+
+            //6.拼接参数
+            sql.append("(?, ?, ?, ?)");
+            params.add(entity.getFileName());
+            params.add(entity.getFilePath());
+            params.add(entity.getFileNameMd5());
+            params.add(entity.getFileContentMd5());
+        }
+
+        //7.执行
+        jdbcTemplate.update(sql.toString(), params.toArray());
+    }
+
+    /**
+     * 批量更新文档内容变更记录的file_content_md5和updated_at
+     *
+     * @param entities 待更新的记录集合（需包含fileNameMd5和新的fileContentMd5）
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void updateBatch(List<EmbeddingRecordEntity> entities) {
+
+        //1.判空
+        if (CollUtil.isEmpty(entities)) {
+            return;
+        }
+
+        //2.定义SQL
+        String sql = "UPDATE embedding_record SET file_content_md5 = ?, updated_at = datetime('now', 'localtime') WHERE file_name_md5 = ?";
+
+        //3.构建批量参数
+        List<Object[]> batchArgs = entities.stream()
+                .map(entity -> new Object[]{entity.getFileContentMd5(), entity.getFileNameMd5()})
+                .toList();
+
+        //4.批量执行
+        jdbcTemplate.batchUpdate(sql, batchArgs);
     }
 
     /**
      * 行数据映射为实体
      *
      * @param row 行数据
-     * @return 向量记录实体
+     * @return 实体
      */
     private EmbeddingRecordEntity mapRowToEntity(Map<String, Object> row) {
         return EmbeddingRecordEntity.builder()
