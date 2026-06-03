@@ -30,6 +30,6 @@ public interface LocalAiService {
      * @param userMessage 用户消息
      * @return 响应结果
      */
-    @SystemMessage(fromResource = "prompt/web-service.markdown")
+    @SystemMessage(fromResource = "prompt/local-service.markdown")
     Flux<String> chatStream(@MemoryId String chatId, @UserMessage String userMessage);
 }

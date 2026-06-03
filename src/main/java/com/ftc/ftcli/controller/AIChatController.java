@@ -55,11 +55,7 @@ public class AIChatController {
     public Flux<String> chatStream(@RequestBody ChatPayload payload) {
         log.info("[AI] 流式聊天 入参:[{}]", payload);
 
-        //1.进行聊天
-        Flux<String> aiResponse = aiChatService.chatStream(payload);
-        log.info("[AI] 流式聊天 出参:[{}]", aiResponse);
-
-        //2.返回
-        return aiResponse;
+        //1.进行聊天，流式返回
+        return aiChatService.chatStream(payload);
     }
 }
