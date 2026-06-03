@@ -45,8 +45,8 @@ public class EmbeddingConfig {
                 .tenantName(storeProperties.getTenant())
                 .databaseName(storeProperties.getDatabase())
                 .collectionName(storeProperties.getCollection())
-                .logRequests(true)
-                .logResponses(true)
+                .logRequests(false)
+                .logResponses(false)
                 .build();
     }
 }
