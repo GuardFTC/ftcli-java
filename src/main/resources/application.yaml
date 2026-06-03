@@ -33,7 +33,7 @@ spring:
 langchain4j:
   open-ai:
     chat-model:
-      api-key: xxx
+      api-key: sk-5a0cc24d7cab4a1f8ec50236448011c4
       base-url: https://api.deepseek.com
       model-name: deepseek-chat
       temperature: 0.7
@@ -41,7 +41,7 @@ langchain4j:
       log-requests: true
       log-responses: true
     streaming-chat-model:
-      api-key: xxx
+      api-key: sk-5a0cc24d7cab4a1f8ec50236448011c4
       base-url: https://api.deepseek.com
       model-name: deepseek-chat
       temperature: 0.7
@@ -67,6 +67,21 @@ ai:
   chat-memory:
     max-tokens: 95000
     token-estimator-model: gpt-4o
+  embedding:
+    model:
+      zhipu:
+        api-key: ab8bcd66b4e74bb9b42dad03d2524116.O2IRkkaeqFnwzNeg
+        model-name: embedding-3
+    store:
+      chroma:
+        url: http://localhost:8000
+        tenant: langchain4j
+        database: langchain4j_db
+        collection: langchain4j_coll
   rag:
+    ingestor:
+      max-segment-size: 1500
+      overlap: 200
+      token-estimator-model: gpt-4o
     web-search:
-      api-key: xxx
+      api-key: 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

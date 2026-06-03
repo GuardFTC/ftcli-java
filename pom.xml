@@ -81,6 +81,20 @@
             <version>${langchain4j.version}</version>
         </dependency>
 
+        <!-- langchain4j 智谱AI依赖 【Embedding模型】-->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-community-zhipu-ai</artifactId>
+            <version>${langchain4j.version}</version>
+        </dependency>
+
+        <!-- langchain4j Chroma依赖 【Chroma作为Embedding数据源】-->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-chroma</artifactId>
+            <version>${langchain4j.version}</version>
+        </dependency>
+
         <!-- springdoc-openapi-ui依赖 -->
         <dependency>
             <groupId>org.springdoc</groupId>

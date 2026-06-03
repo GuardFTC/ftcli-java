@@ -1,13 +1,21 @@
 package com.ftc.ftcli.config.ai;
 
-import com.ftc.ftcli.properties.WebSearchProperties;
+import com.ftc.ftcli.properties.rag.RagIngestorProperties;
+import com.ftc.ftcli.properties.rag.WebSearchProperties;
+import dev.langchain4j.data.document.DocumentSplitter;
+import dev.langchain4j.data.document.splitter.DocumentSplitters;
+import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.openai.OpenAiTokenCountEstimator;
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.rag.content.retriever.WebSearchContentRetriever;
 import dev.langchain4j.rag.query.router.LanguageModelQueryRouter;
 import dev.langchain4j.rag.query.router.QueryRouter;
 import dev.langchain4j.rag.query.transformer.CompressingQueryTransformer;
 import dev.langchain4j.rag.query.transformer.QueryTransformer;
+import dev.langchain4j.store.embedding.EmbeddingStore;
+import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import dev.langchain4j.web.search.WebSearchEngine;
 import dev.langchain4j.web.search.tavily.TavilyWebSearchEngine;
 import lombok.RequiredArgsConstructor;
@@ -26,12 +34,36 @@ import java.util.Map;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
-@EnableConfigurationProperties(WebSearchProperties.class)
+@EnableConfigurationProperties({WebSearchProperties.class, RagIngestorProperties.class})
 public class RagConfig {
 
     private final ChatModel model;
 
+    private final EmbeddingModel embeddingModel;
+
+    private final EmbeddingStore<TextSegment> embeddingStore;
+
     private final WebSearchProperties webSearchProperties;
+
+    private final RagIngestorProperties ingestorProperties;
+
+    @Bean
+    public EmbeddingStoreIngestor ingestor() {
+
+        //1.定义文档切分规则
+        DocumentSplitter splitter = DocumentSplitters.recursive(
+                ingestorProperties.getMaxSegmentSize(),
+                ingestorProperties.getOverlap(),
+                new OpenAiTokenCountEstimator(ingestorProperties.getTokenEstimatorModel())
+        );
+
+        //2.创建入库器，返回
+        return EmbeddingStoreIngestor.builder()
+                .documentSplitter(splitter)
+                .embeddingModel(embeddingModel)
+                .embeddingStore(embeddingStore)
+                .build();
+    }
 
     @Bean
     public QueryTransformer queryTransformer() {

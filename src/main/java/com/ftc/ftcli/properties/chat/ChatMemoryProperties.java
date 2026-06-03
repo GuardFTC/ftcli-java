@@ -1,4 +1,4 @@
-package com.ftc.ftcli.properties;
+package com.ftc.ftcli.properties.chat;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
