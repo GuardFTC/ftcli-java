@@ -239,7 +239,7 @@ public class AIEmbeddingServiceImpl implements AIEmbeddingService {
 
         //7.解析出更新文件列表，返回
         return updateDocRecords.stream()
-                .map(newRecord -> newRecord.getFilePath() + "\\" + newRecord.getFileName())
+                .map(updateRecord -> updateRecord.getFilePath() + "\\" + updateRecord.getFileName())
                 .toList();
     }
 }
