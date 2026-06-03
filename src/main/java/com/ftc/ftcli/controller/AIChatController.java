@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
@@ -49,9 +50,9 @@ public class AIChatController {
         return RestfulResult.Success.getOrUpdateData(aiResponse);
     }
 
-    @PostMapping("/chat/stream")
-    @Operation(summary = "AI聊天")
-    public RestfulResult<Flux<String>> chatStream(@RequestBody ChatPayload payload) {
+    @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @Operation(summary = "AI流式聊天")
+    public Flux<String> chatStream(@RequestBody ChatPayload payload) {
         log.info("[AI] 流式聊天 入参:[{}]", payload);
 
         //1.进行聊天
@@ -59,6 +60,6 @@ public class AIChatController {
         log.info("[AI] 流式聊天 出参:[{}]", aiResponse);
 
         //2.返回
-        return RestfulResult.Success.getOrUpdateData(aiResponse);
+        return aiResponse;
     }
 }
