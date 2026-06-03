@@ -33,7 +33,7 @@ spring:
 langchain4j:
   open-ai:
     chat-model:
-      api-key: sk-5a0cc24d7cab4a1f8ec50236448011c4
+      api-key: xxx
       base-url: https://api.deepseek.com
       model-name: deepseek-chat
       temperature: 0.7
@@ -41,7 +41,7 @@ langchain4j:
       log-requests: true
       log-responses: true
     streaming-chat-model:
-      api-key: sk-5a0cc24d7cab4a1f8ec50236448011c4
+      api-key: xxx
       base-url: https://api.deepseek.com
       model-name: deepseek-chat
       temperature: 0.7
@@ -70,7 +70,7 @@ ai:
   embedding:
     model:
       zhipu:
-        api-key: ab8bcd66b4e74bb9b42dad03d2524116.O2IRkkaeqFnwzNeg
+        api-key: xxx
         model-name: embedding-3
     store:
       chroma:
@@ -84,4 +84,4 @@ ai:
       overlap: 200
       token-estimator-model: gpt-4o
     web-search:
-      api-key: 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
+      api-key: xxx
