@@ -194,7 +194,7 @@ public class AIEmbeddingServiceImpl implements AIEmbeddingService {
 
         //5.解析出新增文件列表，返回
         return newRecords.stream()
-                .map(newRecord -> newRecord.getFilePath() + "\\" + newRecord.getFileName())
+                .map(EmbeddingRecordEntity::getFullPath)
                 .toList();
     }
 
@@ -239,7 +239,7 @@ public class AIEmbeddingServiceImpl implements AIEmbeddingService {
 
         //7.解析出更新文件列表，返回
         return updateDocRecords.stream()
-                .map(updateRecord -> updateRecord.getFilePath() + "\\" + updateRecord.getFileName())
+                .map(EmbeddingRecordEntity::getFullPath)
                 .toList();
     }
 }
