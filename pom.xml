@@ -107,6 +107,13 @@
             </exclusions>
         </dependency>
 
+        <!-- langchain4j Markdown文档解析器依赖 -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-document-parser-markdown</artifactId>
+            <version>${langchain4j.version}</version>
+        </dependency>
+
         <!-- springdoc-openapi-ui依赖 -->
         <dependency>
             <groupId>org.springdoc</groupId>

@@ -8,7 +8,7 @@ import com.ftc.ftcli.infra.sqlite.EmbeddingRecordRepository;
 import com.ftc.ftcli.service.AIEmbeddingService;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.loader.FileSystemDocumentLoader;
-import dev.langchain4j.data.document.parser.TextDocumentParser;
+import dev.langchain4j.data.document.parser.markdown.MarkdownDocumentParser;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
@@ -118,9 +118,9 @@ public class AIEmbeddingServiceImpl implements AIEmbeddingService {
         //如果是文档,则直接获取文档
         List<Document> documents;
         if (uploadFile.isDirectory()) {
-            documents = loadDocumentsRecursively(path, new TextDocumentParser());
+            documents = loadDocumentsRecursively(path, new MarkdownDocumentParser());
         } else {
-            documents = List.of(FileSystemDocumentLoader.loadDocument(path, new TextDocumentParser()));
+            documents = List.of(FileSystemDocumentLoader.loadDocument(path, new MarkdownDocumentParser()));
         }
 
         //4.解析为文档名MD5-文档Map，返回
