@@ -13,4 +13,7 @@ public class EmbeddingFileUploadPayload {
 
     @Schema(description = "文件路径")
     private String path;
+
+    @Schema(description = "文件URL")
+    private String url;
 }

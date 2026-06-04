@@ -1,6 +1,7 @@
 package com.ftc.ftcli.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import com.ftc.ftcli.common.util.DocUtil;
 import com.ftc.ftcli.entity.embedding.EmbeddingFileUploadPayload;
 import com.ftc.ftcli.entity.embedding.EmbeddingFileUploadResult;
 import com.ftc.ftcli.entity.embedding.EmbeddingRecordEntity;
@@ -84,7 +85,7 @@ public class AIEmbeddingServiceImpl implements AIEmbeddingService {
         //8.过滤出文档内容发生更新的文档名称MD5
         Set<String> updateDocsNameSet = existDocsMap.entrySet()
                 .stream()
-                .filter(entry -> EmbeddingRecordEntity.isDocContentChange(entry, existDocRecordsMap))
+                .filter(entry -> DocUtil.isDocContentChange(entry, existDocRecordsMap))
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toSet());
         log.info("[AI] 新增文档 文档内容更新数量:[{}]", updateDocsNameSet.size());
@@ -125,7 +126,7 @@ public class AIEmbeddingServiceImpl implements AIEmbeddingService {
 
         //4.解析为文档名MD5-文档Map，返回
         return documents.stream().collect(Collectors.toMap(
-                EmbeddingRecordEntity::getFileNameMD5AndSetDocMetaData,
+                DocUtil::getFileNameMD5AndSetDocMetaData,
                 doc -> doc,
                 (existing, replacement) -> replacement
         ));
@@ -188,7 +189,7 @@ public class AIEmbeddingServiceImpl implements AIEmbeddingService {
 
         //2.转换为EmbeddingRecordEntity
         List<EmbeddingRecordEntity> newRecords = newDocsMap.entrySet().stream()
-                .map(EmbeddingRecordEntity::doc2Record)
+                .map(DocUtil::doc2Record)
                 .toList();
 
         //3.解析出新增文件列表
