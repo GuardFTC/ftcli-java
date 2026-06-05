@@ -79,7 +79,7 @@ public class ToolRegistry implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) {
 
-        //1.从数据库查询全部工具规格
+        //1.从数据库查询全部工具描述
         List<ToolSpecEntity> toolSpecEntities = toolSpecRepository.findAll();
 
         //2.遍历构建工具
