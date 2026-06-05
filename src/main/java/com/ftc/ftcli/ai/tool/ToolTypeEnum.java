@@ -21,6 +21,11 @@ public enum ToolTypeEnum {
      * 方法内部区分用户工具
      */
     MEMORY_ID("memory_id"),
+
+    /**
+     * 系统工具
+     */
+    SYSTEM("system"),
     ;
 
     /**
