@@ -58,7 +58,7 @@
         /* 编辑弹窗 */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 999; justify-content: center; align-items: center; }
         .modal-overlay.active { display: flex; }
-        .modal { background: #fff; border-radius: 8px; padding: 24px; width: 780px; max-height: 80vh; overflow-y: auto; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+        .modal { background: #fff; border-radius: 8px; padding: 24px; width: 920px; max-height: 80vh; overflow-y: auto; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
         .modal h2 { font-size: 18px; margin-bottom: 20px; }
         .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
         .btn-cancel { background: #fff; border: 1px solid #d9d9d9; color: #666; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-size: 14px; }
@@ -185,6 +185,18 @@
     </div>
 </div>
 
+<!-- 删除确认弹窗 -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal" style="width:420px;">
+        <h2 style="color:#ff4d4f;">确认删除</h2>
+        <p style="margin:12px 0 20px;font-size:14px;color:#666;" id="deleteMsg"></p>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeDeleteModal()">取消</button>
+            <button class="btn-delete" style="margin:0;padding:8px 20px;font-size:14px;" onclick="confirmDelete()">确认删除</button>
+        </div>
+    </div>
+</div>
+
 <script>
 const API_BASE = '/api/rest/v1/ai/tools';
 
@@ -300,11 +312,24 @@ function toggleToolDetail(card) {
     detail.classList.toggle('expanded');
 }
 
-// 删除工具
-async function deleteTool(name) {
-    if (!confirm('确认删除工具「' + name + '」？')) return;
+// 删除工具 - 弹出确认框
+let pendingDeleteName = '';
+
+function deleteTool(name) {
+    pendingDeleteName = name;
+    document.getElementById('deleteMsg').textContent = '确定要删除工具「' + name + '」吗？此操作不可撤销。';
+    document.getElementById('deleteModal').classList.add('active');
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('active');
+    pendingDeleteName = '';
+}
+
+async function confirmDelete() {
+    if (!pendingDeleteName) return;
     try {
-        const resp = await fetch(API_BASE + '/' + name, { method: 'DELETE' });
+        const resp = await fetch(API_BASE + '/' + pendingDeleteName, { method: 'DELETE' });
         if (resp.ok) {
             showToast('删除成功', 'success');
             loadTools();
@@ -314,6 +339,7 @@ async function deleteTool(name) {
     } catch (e) {
         showToast('删除失败: ' + e.message, 'error');
     }
+    closeDeleteModal();
 }
 
 // 添加参数行
