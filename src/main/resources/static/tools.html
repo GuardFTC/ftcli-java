@@ -7,82 +7,135 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; padding: 24px; color: #333; }
+        .container { max-width: 1000px; margin: 0 auto; }
         h1 { font-size: 24px; margin-bottom: 24px; color: #1a1a1a; }
-        .container { max-width: 960px; margin: 0 auto; }
 
-        /* 工具列表 */
-        .tool-list { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 24px; }
-        .tool-list-header { padding: 16px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-        .tool-list-header h2 { font-size: 16px; color: #666; }
-        .tool-list-empty { padding: 40px 20px; text-align: center; color: #999; }
-        .tool-item { padding: 16px 20px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
-        .tool-item:last-child { border-bottom: none; }
-        .tool-info { flex: 1; }
-        .tool-name { font-weight: 600; font-size: 15px; color: #1a1a1a; }
-        .tool-desc { font-size: 13px; color: #666; margin-top: 4px; }
-        .tool-type { display: inline-block; font-size: 11px; background: #e8f4fd; color: #1890ff; padding: 2px 8px; border-radius: 4px; margin-top: 6px; }
-        .tool-params { font-size: 12px; color: #999; margin-top: 4px; }
-        .btn-delete { background: #ff4d4f; color: #fff; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; }
-        .btn-delete:hover { background: #ff7875; }
+        /* Tab 切换 */
+        .tabs { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 2px solid #e8e8e8; }
+        .tab { padding: 10px 24px; cursor: pointer; font-size: 14px; color: #666; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
+        .tab:hover { color: #1890ff; }
+        .tab.active { color: #1890ff; border-bottom-color: #1890ff; font-weight: 500; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* 工具类型分组 */
+        .type-group { margin-bottom: 20px; }
+        .type-header { display: flex; align-items: center; gap: 8px; padding: 10px 0; cursor: pointer; user-select: none; }
+        .type-header:hover .type-label { color: #1890ff; }
+        .type-icon { font-size: 12px; color: #999; transition: transform 0.2s; width: 16px; }
+        .type-icon.expanded { transform: rotate(90deg); }
+        .type-label { font-size: 15px; font-weight: 600; color: #333; }
+        .type-count { font-size: 12px; color: #999; background: #f0f0f0; padding: 1px 8px; border-radius: 10px; }
+        .type-tools { padding-left: 24px; display: none; }
+        .type-tools.expanded { display: block; }
+
+        /* 工具卡片 - 收起状态 */
+        .tool-card { background: #fff; border-radius: 6px; border: 1px solid #eee; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; }
+        .tool-card:hover { border-color: #d0d7de; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+        .tool-card-summary { padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
+        .tool-card-left { display: flex; align-items: center; gap: 12px; }
+        .tool-name { font-weight: 500; font-size: 14px; color: #1a1a1a; font-family: 'Courier New', monospace; }
+        .tool-desc-brief { font-size: 13px; color: #666; }
+
+        /* 工具详情 - 展开状态 */
+        .tool-detail { display: none; padding: 0 16px 16px; border-top: 1px solid #f5f5f5; }
+        .tool-detail.expanded { display: block; }
+        .detail-section { margin-top: 12px; }
+        .detail-label { font-size: 12px; color: #999; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .param-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .param-table th { text-align: left; padding: 6px 10px; background: #fafafa; color: #666; font-weight: 500; border-bottom: 1px solid #eee; }
+        .param-table td { padding: 6px 10px; border-bottom: 1px solid #f5f5f5; }
+        .param-table tr:last-child td { border-bottom: none; }
+        .badge { display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 3px; }
+        .badge-required { background: #fff1f0; color: #ff4d4f; }
+        .badge-optional { background: #f6ffed; color: #52c41a; }
+        .badge-type { background: #e6f7ff; color: #1890ff; }
+        .btn-delete { background: none; border: 1px solid #ff4d4f; color: #ff4d4f; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-top: 12px; }
+        .btn-delete:hover { background: #ff4d4f; color: #fff; }
+
+        /* 空状态 */
+        .empty { padding: 40px 20px; text-align: center; color: #999; }
 
         /* 新增表单 */
-        .add-form { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 20px; }
-        .add-form h2 { font-size: 16px; color: #666; margin-bottom: 16px; }
-        .form-row { margin-bottom: 14px; }
-        .form-row label { display: block; font-size: 13px; color: #666; margin-bottom: 4px; }
-        .form-row input, .form-row select, .form-row textarea { width: 100%; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 14px; }
-        .form-row textarea { height: 80px; resize: vertical; }
-        .params-section { background: #fafafa; padding: 12px; border-radius: 4px; margin-top: 8px; }
-        .params-section h3 { font-size: 13px; color: #666; margin-bottom: 8px; }
-        .param-item { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
-        .param-item input, .param-item select { flex: 1; padding: 6px 8px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 13px; }
-        .param-item .btn-remove-param { background: #f5f5f5; border: 1px solid #d9d9d9; padding: 4px 8px; border-radius: 4px; cursor: pointer; color: #999; }
-        .btn-add-param { background: #fafafa; border: 1px dashed #d9d9d9; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; color: #666; margin-top: 4px; }
+        .add-form { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 24px; }
+        .add-form h2 { font-size: 16px; color: #333; margin-bottom: 20px; }
+        .form-row { margin-bottom: 16px; }
+        .form-row label { display: block; font-size: 13px; color: #666; margin-bottom: 4px; font-weight: 500; }
+        .form-row input, .form-row select { width: 100%; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 14px; transition: border-color 0.2s; }
+        .form-row input:focus, .form-row select:focus { outline: none; border-color: #1890ff; box-shadow: 0 0 0 2px rgba(24,144,255,0.1); }
+        .params-section { background: #fafafa; padding: 16px; border-radius: 6px; border: 1px solid #f0f0f0; }
+        .params-section h3 { font-size: 13px; color: #666; margin-bottom: 12px; font-weight: 500; }
+        .param-item { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; flex-wrap: wrap; }
+        .param-item input, .param-item select { flex: 1; min-width: 80px; padding: 6px 8px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 13px; }
+        .param-item .btn-remove-param { background: #fff; border: 1px solid #d9d9d9; padding: 5px 10px; border-radius: 4px; cursor: pointer; color: #999; font-size: 14px; }
+        .param-item .btn-remove-param:hover { border-color: #ff4d4f; color: #ff4d4f; }
+        .btn-add-param { background: #fff; border: 1px dashed #d9d9d9; padding: 6px 16px; border-radius: 4px; cursor: pointer; font-size: 13px; color: #666; }
         .btn-add-param:hover { border-color: #1890ff; color: #1890ff; }
-        .btn-submit { background: #1890ff; color: #fff; border: none; padding: 10px 24px; border-radius: 4px; cursor: pointer; font-size: 14px; margin-top: 8px; }
+        .btn-submit { background: #1890ff; color: #fff; border: none; padding: 10px 28px; border-radius: 4px; cursor: pointer; font-size: 14px; margin-top: 16px; }
         .btn-submit:hover { background: #40a9ff; }
 
-        .toast { position: fixed; top: 20px; right: 20px; padding: 12px 20px; border-radius: 4px; color: #fff; font-size: 14px; display: none; z-index: 1000; }
+        /* Toast */
+        .toast { position: fixed; top: 20px; right: 20px; padding: 12px 20px; border-radius: 6px; color: #fff; font-size: 14px; display: none; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
         .toast-success { background: #52c41a; }
         .toast-error { background: #ff4d4f; }
+
+        /* 统计 */
+        .stats { display: flex; gap: 16px; margin-bottom: 20px; }
+        .stat-card { background: #fff; border-radius: 6px; padding: 14px 20px; border: 1px solid #eee; flex: 1; }
+        .stat-card .stat-num { font-size: 24px; font-weight: 600; color: #1890ff; }
+        .stat-card .stat-label { font-size: 12px; color: #999; margin-top: 2px; }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>AI 工具管理</h1>
 
-    <!-- 工具列表 -->
-    <div class="tool-list">
-        <div class="tool-list-header">
-            <h2>已注册工具</h2>
-            <span id="toolCount">0 个</span>
+    <!-- 统计 -->
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-num" id="statTotal">0</div>
+            <div class="stat-label">工具总数</div>
         </div>
-        <div id="toolListBody">
-            <div class="tool-list-empty">加载中...</div>
+        <div class="stat-card">
+            <div class="stat-num" id="statTypes">0</div>
+            <div class="stat-label">工具类型</div>
         </div>
     </div>
 
+    <!-- Tab -->
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('list')">已注册工具</div>
+        <div class="tab" onclick="switchTab('add')">新增工具</div>
+    </div>
+
+    <!-- 工具列表 -->
+    <div class="tab-content active" id="tab-list">
+        <div id="toolListBody"><div class="empty">加载中...</div></div>
+    </div>
+
     <!-- 新增工具 -->
-    <div class="add-form">
-        <h2>新增工具</h2>
-        <div class="form-row">
-            <label>工具名称</label>
-            <input type="text" id="toolName" placeholder="如: getWeather">
+    <div class="tab-content" id="tab-add">
+        <div class="add-form">
+            <h2>新增工具</h2>
+            <div class="form-row">
+                <label>工具名称</label>
+                <input type="text" id="toolName" placeholder="如: getWeather">
+            </div>
+            <div class="form-row">
+                <label>工具描述</label>
+                <input type="text" id="toolDesc" placeholder="如: 获取指定城市的天气信息">
+            </div>
+            <div class="form-row">
+                <label>工具类型</label>
+                <input type="text" id="toolType" placeholder="如: weather">
+            </div>
+            <div class="params-section">
+                <h3>参数列表</h3>
+                <div id="paramsList"></div>
+                <button class="btn-add-param" onclick="addParam()">+ 添加参数</button>
+            </div>
+            <button class="btn-submit" onclick="submitTool()">新增工具</button>
         </div>
-        <div class="form-row">
-            <label>工具描述</label>
-            <input type="text" id="toolDesc" placeholder="如: 获取指定城市的天气信息">
-        </div>
-        <div class="form-row">
-            <label>工具类型</label>
-            <input type="text" id="toolType" placeholder="如: weather">
-        </div>
-        <div class="params-section">
-            <h3>参数列表</h3>
-            <div id="paramsList"></div>
-            <button class="btn-add-param" onclick="addParam()">+ 添加参数</button>
-        </div>
-        <button class="btn-submit" onclick="submitTool()">新增工具</button>
     </div>
 </div>
 
@@ -90,6 +143,15 @@
 
 <script>
 const API_BASE = '/api/rest/v1/ai/tools';
+
+// Tab 切换
+function switchTab(name) {
+    document.querySelectorAll('.tab').forEach((t, i) => {
+        t.classList.toggle('active', (name === 'list' && i === 0) || (name === 'add' && i === 1));
+    });
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+}
 
 // 加载工具列表
 async function loadTools() {
@@ -102,27 +164,94 @@ async function loadTools() {
     }
 }
 
-// 渲染工具列表
+// 按类型分组渲染
 function renderTools(tools) {
-    const body = document.getElementById('toolListBody');
-    document.getElementById('toolCount').textContent = tools.length + ' 个';
+    document.getElementById('statTotal').textContent = tools.length;
+
+    // 按类型分组
+    const grouped = {};
+    tools.forEach(tool => {
+        const type = tool.type || '未分类';
+        if (!grouped[type]) grouped[type] = [];
+        grouped[type].push(tool);
+    });
+
+    const types = Object.keys(grouped);
+    document.getElementById('statTypes').textContent = types.length;
 
     if (tools.length === 0) {
-        body.innerHTML = '<div class="tool-list-empty">暂无已注册工具</div>';
+        document.getElementById('toolListBody').innerHTML = '<div class="empty">暂无已注册工具</div>';
         return;
     }
 
-    body.innerHTML = tools.map(tool => `
-        <div class="tool-item">
-            <div class="tool-info">
-                <div class="tool-name">${tool.name}</div>
-                <div class="tool-desc">${tool.description}</div>
-                <span class="tool-type">${tool.type}</span>
-                ${tool.params && tool.params.length > 0 ? `<div class="tool-params">参数: ${tool.params.map(p => p.name + '(' + p.type.toLowerCase() + (p.required ? ',必填' : '') + ')').join(', ')}</div>` : ''}
+    let html = '';
+    types.forEach(type => {
+        const typeTools = grouped[type];
+        html += `
+            <div class="type-group">
+                <div class="type-header" onclick="toggleTypeGroup(this)">
+                    <span class="type-icon expanded">▶</span>
+                    <span class="type-label">${type}</span>
+                    <span class="type-count">${typeTools.length}</span>
+                </div>
+                <div class="type-tools expanded">
+                    ${typeTools.map(tool => renderToolCard(tool)).join('')}
+                </div>
             </div>
-            <button class="btn-delete" onclick="deleteTool('${tool.name}')">删除</button>
+        `;
+    });
+
+    document.getElementById('toolListBody').innerHTML = html;
+}
+
+// 渲染单个工具卡片
+function renderToolCard(tool) {
+    const paramsHtml = tool.params && tool.params.length > 0 ? `
+        <div class="detail-section">
+            <div class="detail-label">参数</div>
+            <table class="param-table">
+                <tr><th>名称</th><th>描述</th><th>类型</th><th>必填</th><th>枚举值</th></tr>
+                ${tool.params.map(p => `
+                    <tr>
+                        <td><code>${p.name}</code></td>
+                        <td>${p.description}</td>
+                        <td><span class="badge badge-type">${p.type}</span></td>
+                        <td>${p.required ? '<span class="badge badge-required">必填</span>' : '<span class="badge badge-optional">可选</span>'}</td>
+                        <td>${p.enumValues ? p.enumValues.join(', ') : '-'}</td>
+                    </tr>
+                `).join('')}
+            </table>
         </div>
-    `).join('');
+    ` : '<div class="detail-section"><div class="detail-label">参数</div><span style="font-size:13px;color:#999;">无参数</span></div>';
+
+    return `
+        <div class="tool-card" onclick="toggleToolDetail(this)">
+            <div class="tool-card-summary">
+                <div class="tool-card-left">
+                    <span class="tool-name">${tool.name}</span>
+                    <span class="tool-desc-brief">${tool.description}</span>
+                </div>
+            </div>
+            <div class="tool-detail">
+                ${paramsHtml}
+                <button class="btn-delete" onclick="event.stopPropagation(); deleteTool('${tool.name}')">删除此工具</button>
+            </div>
+        </div>
+    `;
+}
+
+// 展开/收起类型组
+function toggleTypeGroup(header) {
+    const icon = header.querySelector('.type-icon');
+    const tools = header.nextElementSibling;
+    icon.classList.toggle('expanded');
+    tools.classList.toggle('expanded');
+}
+
+// 展开/收起工具详情
+function toggleToolDetail(card) {
+    const detail = card.querySelector('.tool-detail');
+    detail.classList.toggle('expanded');
 }
 
 // 删除工具
@@ -162,7 +291,6 @@ function addParam() {
         <input type="text" placeholder="枚举值(逗号分隔)" class="param-enums" style="display:none;">
         <button class="btn-remove-param" onclick="this.parentElement.remove()">×</button>
     `;
-    // 监听类型变化，显示/隐藏枚举输入
     const typeSelect = div.querySelector('.param-type');
     const enumInput = div.querySelector('.param-enums');
     typeSelect.addEventListener('change', () => {
@@ -182,7 +310,6 @@ async function submitTool() {
         return;
     }
 
-    // 收集参数
     const paramItems = document.querySelectorAll('.param-item');
     const params = [];
     for (const item of paramItems) {
@@ -211,12 +338,13 @@ async function submitTool() {
         });
         const result = await resp.json();
         if (resp.ok) {
-            showToast('新增成功, ID: ' + result.data, 'success');
+            showToast('新增成功', 'success');
             document.getElementById('toolName').value = '';
             document.getElementById('toolDesc').value = '';
             document.getElementById('toolType').value = '';
             document.getElementById('paramsList').innerHTML = '';
             loadTools();
+            switchTab('list');
         } else {
             showToast('新增失败: ' + result.message, 'error');
         }
