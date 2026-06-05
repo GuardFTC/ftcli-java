@@ -53,4 +53,18 @@ public class AIEmbeddingController {
         //3.返回
         return RestfulResult.Success.addData(fileUploadResult);
     }
+
+    @DeleteMapping("docs/{id}")
+    @Operation(summary = "删除文档")
+    public RestfulResult<Void> upload(@PathVariable Long id) {
+
+        //1.打印日志
+        log.info("[AI] 删除文档 入参:[{}]", id);
+
+        //2.删除文档
+        aiEmbeddingService.remove(id);
+
+        //3.返回
+        return RestfulResult.Success.removeData();
+    }
 }

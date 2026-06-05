@@ -27,4 +27,11 @@ public interface AIEmbeddingService {
      * @return 文档上传结果
      */
     EmbeddingFileUploadResult upload(EmbeddingFileUploadPayload payload);
+
+    /**
+     * 删除文档
+     *
+     * @param id 文档ID
+     */
+    void remove(Long id);
 }

@@ -97,6 +97,24 @@ public class AIEmbeddingServiceImpl implements AIEmbeddingService {
         return new EmbeddingFileUploadResult(newFiles, updateFiles);
     }
 
+    @Override
+    public void remove(Long id) {
+
+        //1.查询文档记录
+        EmbeddingRecordEntity docRecord = embeddingRecordRepository.findById(id);
+        if (null == docRecord) {
+            log.error("[AI] 删除文档 文档不存在:[{}]", id);
+            return;
+        }
+
+        //2.删除向量数据库向量
+        Filter filter = metadataKey("file_name_md5").isEqualTo(docRecord.getFileNameMd5());
+        embeddingStore.removeAll(filter);
+
+        //3.删除文档记录
+        embeddingRecordRepository.deleteById(id);
+    }
+
     /**
      * 加载文档
      *

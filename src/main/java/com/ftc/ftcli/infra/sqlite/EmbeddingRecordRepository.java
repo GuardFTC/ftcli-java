@@ -75,6 +75,29 @@ public class EmbeddingRecordRepository {
     }
 
     /**
+     * 根据ID查询记录
+     *
+     * @param id 记录ID
+     * @return embedding记录，不存在返回null
+     */
+    public EmbeddingRecordEntity findById(Long id) {
+
+        //1.定义SQL
+        String sql = "SELECT id, file_name, file_path, file_name_md5, file_content_md5, created_at, updated_at FROM embedding_record WHERE id = ?";
+
+        //2.查询
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, id);
+
+        //3.判空
+        if (CollUtil.isEmpty(rows)) {
+            return null;
+        }
+
+        //4.映射返回
+        return mapRowToEntity(rows.get(0));
+    }
+
+    /**
      * 批量保存新增的文档记录
      *
      * @param entities 待保存的记录集合
@@ -137,6 +160,24 @@ public class EmbeddingRecordRepository {
 
         //4.批量执行
         jdbcTemplate.batchUpdate(sql, batchArgs);
+    }
+
+    /**
+     * 根据ID删除记录
+     *
+     * @param id 记录ID
+     * @return 是否删除成功
+     */
+    public boolean deleteById(Long id) {
+
+        //1.定义SQL
+        String sql = "DELETE FROM embedding_record WHERE id = ?";
+
+        //2.执行
+        int affected = jdbcTemplate.update(sql, id);
+
+        //3.返回
+        return affected > 0;
     }
 
     /**
