@@ -26,7 +26,7 @@ spring:
 
   #SQLite数据源配置
   datasource:
-    url: jdbc:sqlite:data/ftcli.db
+    url: jdbc:sqlite:C:/Users/Administrator/project/java/ftcli/data/ftcli.db
     driver-class-name: org.sqlite.JDBC
 
 #LangChain4j配置
