@@ -1,6 +1,6 @@
 package com.ftc.ftcli.config.ai;
 
-import com.ftc.ftcli.common.util.doc.DocMetaDataKeyEnum;
+import com.ftc.ftcli.common.enums.doc.DocMetaDataKeyEnum;
 import com.ftc.ftcli.properties.rag.RagIngestorProperties;
 import com.ftc.ftcli.properties.rag.WebSearchProperties;
 import dev.langchain4j.data.document.DocumentSplitter;

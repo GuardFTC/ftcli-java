@@ -1,4 +1,4 @@
-package com.ftc.ftcli.common.enums;
+package com.ftc.ftcli.common.enums.result;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

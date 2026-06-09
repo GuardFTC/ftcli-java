@@ -1,5 +1,6 @@
-package com.ftc.ftcli.common.util.doc_parser;
+package com.ftc.ftcli.common.util.doc.doc_parser;
 
+import com.ftc.ftcli.common.enums.doc.DocTypeEnum;
 import dev.langchain4j.data.document.DocumentParser;
 import dev.langchain4j.data.document.parser.TextDocumentParser;
 import dev.langchain4j.data.document.parser.apache.pdfbox.ApachePdfBoxDocumentParser;

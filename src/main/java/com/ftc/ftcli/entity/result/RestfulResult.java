@@ -3,7 +3,7 @@ package com.ftc.ftcli.entity.result;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson2.JSONObject;
-import com.ftc.ftcli.common.enums.RestfulResultEnum;
+import com.ftc.ftcli.common.enums.result.RestfulResultEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;

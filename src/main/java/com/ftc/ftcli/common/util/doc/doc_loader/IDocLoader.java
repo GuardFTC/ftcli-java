@@ -1,6 +1,7 @@
-package com.ftc.ftcli.common.util.doc_loader;
+package com.ftc.ftcli.common.util.doc.doc_loader;
 
 import cn.hutool.core.util.StrUtil;
+import com.ftc.ftcli.common.enums.doc.DocLoaderEnum;
 import dev.langchain4j.data.document.Document;
 
 import java.util.Map;

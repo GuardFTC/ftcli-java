@@ -1,5 +1,6 @@
-package com.ftc.ftcli.common.util.doc_loader;
+package com.ftc.ftcli.common.util.doc.doc_loader;
 
+import com.ftc.ftcli.common.enums.doc.DocLoaderEnum;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;

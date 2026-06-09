@@ -1,14 +1,14 @@
-package com.ftc.ftcli.common.util.doc_loader.impl;
+package com.ftc.ftcli.common.util.doc.doc_loader.impl;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.net.URLDecoder;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.DigestUtil;
-import com.ftc.ftcli.common.util.doc.DocMetaDataKeyEnum;
-import com.ftc.ftcli.common.util.doc_loader.DocLoaderEnum;
-import com.ftc.ftcli.common.util.doc_loader.IDocLoader;
-import com.ftc.ftcli.common.util.doc_parser.DocParserFactory;
-import com.ftc.ftcli.common.util.doc_parser.DocTypeEnum;
+import com.ftc.ftcli.common.enums.doc.DocMetaDataKeyEnum;
+import com.ftc.ftcli.common.enums.doc.DocLoaderEnum;
+import com.ftc.ftcli.common.util.doc.doc_loader.IDocLoader;
+import com.ftc.ftcli.common.util.doc.doc_parser.DocParserFactory;
+import com.ftc.ftcli.common.enums.doc.DocTypeEnum;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentParser;
 import dev.langchain4j.data.document.loader.UrlDocumentLoader;

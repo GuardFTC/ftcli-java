@@ -2,6 +2,7 @@ package com.ftc.ftcli.common.util.doc;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.DigestUtil;
+import com.ftc.ftcli.common.enums.doc.DocMetaDataKeyEnum;
 import com.ftc.ftcli.entity.embedding.EmbeddingRecordEntity;
 import dev.langchain4j.data.document.Document;
 
