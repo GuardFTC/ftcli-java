@@ -1,5 +1,6 @@
 package com.ftc.ftcli.config.ai;
 
+import com.ftc.ftcli.common.util.doc.DocMetaDataKeyEnum;
 import com.ftc.ftcli.properties.rag.RagIngestorProperties;
 import com.ftc.ftcli.properties.rag.WebSearchProperties;
 import dev.langchain4j.data.document.DocumentSplitter;
@@ -119,9 +120,9 @@ public class RagConfig {
     public ContentInjector contentInjector() {
         return DefaultContentInjector.builder()
                 .metadataKeysToInclude(asList(
-                        "absolute_directory_path",
-                        "file_name",
-                        "full_path"
+                        DocMetaDataKeyEnum.ABSOLUTE_DIRECTORY_PATH.getKey(),
+                        DocMetaDataKeyEnum.FILE_NAME.getKey(),
+                        DocMetaDataKeyEnum.FULL_PATH.getKey()
                 ))
                 .build();
     }

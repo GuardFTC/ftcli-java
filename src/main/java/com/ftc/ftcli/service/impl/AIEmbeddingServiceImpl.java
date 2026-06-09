@@ -3,7 +3,7 @@ package com.ftc.ftcli.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileUtil;
 import com.ftc.ftcli.common.embedding.doc_parser.DocParserFactory;
-import com.ftc.ftcli.common.util.DocUtil;
+import com.ftc.ftcli.common.util.doc.DocUtil;
 import com.ftc.ftcli.entity.embedding.EmbeddingFileUploadPayload;
 import com.ftc.ftcli.entity.embedding.EmbeddingFileUploadResult;
 import com.ftc.ftcli.entity.embedding.EmbeddingRecordEntity;
@@ -107,7 +107,7 @@ public class AIEmbeddingServiceImpl implements AIEmbeddingService {
 //        }
 //
 //        //2.删除向量数据库向量
-//        Filter filter = metadataKey("file_name_md5").isEqualTo(docRecord.getFileNameMd5());
+//        Filter filter = metadataKey(DocMetaDataKeyEnum.FILE_NAME_MD5.getKey()).isEqualTo(docRecord.getFileNameMd5());
 //        embeddingStore.removeAll(filter);
 //
 //        //3.删除文档记录
@@ -231,7 +231,7 @@ public class AIEmbeddingServiceImpl implements AIEmbeddingService {
 
 //        //4.写入向量数据库前，先按file_name_md5清理可能残留的旧向量（保证ingest幂等，防止重试产生重复向量），再写入新向量
 //        try {
-//            Filter filter = metadataKey("file_name_md5").isIn(newDocsMap.keySet());
+//            Filter filter = metadataKey(DocMetaDataKeyEnum.FILE_NAME_MD5.getKey()).isIn(newDocsMap.keySet());
 //            embeddingStore.removeAll(filter);
 //            ingestor.ingest(newDocsMap.values().stream().toList());
 //        } catch (Exception e) {
@@ -280,7 +280,7 @@ public class AIEmbeddingServiceImpl implements AIEmbeddingService {
 
 //        //5.先按file_name_md5批量删除旧向量，再写入更新后的向量
 //        try {
-//            Filter filter = metadataKey("file_name_md5").isIn(updateDocsNameSet);
+//            Filter filter = metadataKey(DocMetaDataKeyEnum.FILE_NAME_MD5.getKey()).isIn(updateDocsNameSet);
 //            embeddingStore.removeAll(filter);
 //            ingestor.ingest(updateDocs);
 //        } catch (Exception e) {

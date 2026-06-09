@@ -1,4 +1,4 @@
-package com.ftc.ftcli.common.util;
+package com.ftc.ftcli.common.util.doc;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.DigestUtil;
@@ -36,10 +36,10 @@ public class DocUtil {
         String fileNameMD5 = DigestUtil.md5Hex(fullPath);
 
         //5.文档设置相关元数据
-        doc.metadata().put("absolute_directory_path", absoluteDirectoryPath);
-        doc.metadata().put("file_name", fileName);
-        doc.metadata().put("full_path", fullPath);
-        doc.metadata().put("file_name_md5", fileNameMD5);
+        doc.metadata().put(DocMetaDataKeyEnum.ABSOLUTE_DIRECTORY_PATH.getKey(), absoluteDirectoryPath);
+        doc.metadata().put(DocMetaDataKeyEnum.FILE_NAME.getKey(), fileName);
+        doc.metadata().put(DocMetaDataKeyEnum.FULL_PATH.getKey(), fullPath);
+        doc.metadata().put(DocMetaDataKeyEnum.FILE_NAME_MD5.getKey(), fileNameMD5);
 
         //6.生成MD5,返回
         return fileNameMD5;
@@ -136,12 +136,7 @@ public class DocUtil {
      * @return 文档绝对路径
      */
     public static String getAbsoluteDirectoryPath(Document doc) {
-
-        //1.设置Key
-        String key = "absolute_directory_path";
-
-        //2.获取路径返回
-        return getStringFromMetadata(doc, key);
+        return getStringFromMetadata(doc, DocMetaDataKeyEnum.ABSOLUTE_DIRECTORY_PATH.getKey());
     }
 
     /**
@@ -151,12 +146,7 @@ public class DocUtil {
      * @return 文档文件名
      */
     public static String getFileName(Document doc) {
-
-        //1.设置Key
-        String key = "file_name";
-
-        //2.获取文件名返回
-        return getStringFromMetadata(doc, key);
+        return getStringFromMetadata(doc, DocMetaDataKeyEnum.FILE_NAME.getKey());
     }
 
     /**

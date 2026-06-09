@@ -11,9 +11,6 @@ import lombok.Data;
 @Data
 public class EmbeddingFileUploadPayload {
 
-    @Schema(description = "文件路径")
+    @Schema(description = "文件路径/URL")
     private String path;
-
-    @Schema(description = "文件URL")
-    private String url;
 }
