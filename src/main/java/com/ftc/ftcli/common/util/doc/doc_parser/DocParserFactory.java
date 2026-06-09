@@ -30,7 +30,8 @@ public class DocParserFactory {
             case MARKDOWN -> new MarkdownDocumentParser();
             case PDF -> new ApachePdfBoxDocumentParser(true);
             case YAML, YML -> new YamlDocumentParser();
-            default -> new TextDocumentParser();
+            case DEFAULT -> new TextDocumentParser();
+            default -> null;
         };
     }
 }

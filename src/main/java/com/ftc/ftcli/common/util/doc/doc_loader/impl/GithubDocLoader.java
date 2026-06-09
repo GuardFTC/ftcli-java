@@ -55,7 +55,11 @@ public class GithubDocLoader implements IDocLoader {
             String fileType = FileUtil.extName(urlInfo.getFilePath());
 
             //4.获取DocParser
-            DocumentParser docParser = DocParserFactory.getDocParser(fileType);
+            DocumentParser parser = DocParserFactory.getDocParser(fileType);
+            if(null == parser){
+                log.error("[Github文档加载器] 文档解析器不存在:[{}] [{}]", decodedUrl, fileType);
+                return Map.of();
+            }
 
             //5.加载文档
             Document doc = githubDocumentLoader.loadDocument(
@@ -63,7 +67,7 @@ public class GithubDocLoader implements IDocLoader {
                     urlInfo.getRepo(),
                     urlInfo.getBranchOrTag(),
                     urlInfo.getFilePath(),
-                    docParser
+                    parser
             );
 
             //6.生成MD5

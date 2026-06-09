@@ -4,11 +4,11 @@ import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.net.URLDecoder;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.DigestUtil;
-import com.ftc.ftcli.common.enums.doc.DocMetaDataKeyEnum;
 import com.ftc.ftcli.common.enums.doc.DocLoaderEnum;
+import com.ftc.ftcli.common.enums.doc.DocMetaDataKeyEnum;
+import com.ftc.ftcli.common.enums.doc.DocTypeEnum;
 import com.ftc.ftcli.common.util.doc.doc_loader.IDocLoader;
 import com.ftc.ftcli.common.util.doc.doc_parser.DocParserFactory;
-import com.ftc.ftcli.common.enums.doc.DocTypeEnum;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentParser;
 import dev.langchain4j.data.document.loader.UrlDocumentLoader;
@@ -56,20 +56,27 @@ public class UrlDocLoader implements IDocLoader {
 
             //6.根据文件类型获取解析器
             DocumentParser parser = DocParserFactory.getDocParser(fileType);
+            if (null == parser) {
+                log.error("[URL文档加载器] 文档解析器不存在:[{}] [{}]", decodedUrl, fileType);
+                return Map.of();
+            }
 
-            //7.加载文档
-            Document doc = UrlDocumentLoader.load(decodedUrl, parser);
+            //7.定义原解码URL
+            String originalDecodedUrl = URLDecoder.decode(url, StandardCharsets.UTF_8);
 
-            //8.生成MD5
+            //8.加载文档
+            Document doc = UrlDocumentLoader.load(originalDecodedUrl, parser);
+
+            //9.生成MD5
             String fileNameMD5 = DigestUtil.md5Hex(decodedUrl);
 
-            //9.文档设置相关元数据
+            //10.文档设置相关元数据
             doc.metadata().put(DocMetaDataKeyEnum.ABSOLUTE_DIRECTORY_PATH.getKey(), decodedUrl);
             doc.metadata().put(DocMetaDataKeyEnum.FILE_NAME.getKey(), fileName);
             doc.metadata().put(DocMetaDataKeyEnum.FULL_PATH.getKey(), decodedUrl);
             doc.metadata().put(DocMetaDataKeyEnum.FILE_NAME_MD5.getKey(), fileNameMD5);
 
-            //10.写入Map返回
+            //11.写入Map返回
             return Map.of(fileNameMD5, doc);
         } catch (Exception e) {
             log.error("[URL文档加载器] 加载文档:[{}] 异常", url, e);

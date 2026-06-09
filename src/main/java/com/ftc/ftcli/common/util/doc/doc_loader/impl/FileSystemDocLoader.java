@@ -107,9 +107,19 @@ public class FileSystemDocLoader implements IDocLoader {
 
             //4.根据扩展名获取解析器
             DocumentParser parser = DocParserFactory.getDocParser(ext);
+            if(null == parser){
+                log.error("[系统文档加载器] 文档解析器不存在:[{}]", file.getAbsolutePath());
+                continue;
+            }
 
             //5.加载文档
-            Document doc = FileSystemDocumentLoader.loadDocument(file.toPath(), parser);
+            Document doc;
+            try {
+                doc = FileSystemDocumentLoader.loadDocument(file.toPath(), parser);
+            } catch (Exception e) {
+                log.error("[系统文档加载器] 加载文档:[{}] 异常", file.getAbsolutePath(), e);
+                continue;
+            }
 
             //6.添加文档
             documents.add(doc);
