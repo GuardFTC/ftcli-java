@@ -45,7 +45,7 @@ public class GithubDocLoader implements IDocLoader {
             String decodedUrl = URLDecoder.decode(url, StandardCharsets.UTF_8);
 
             //2.解析github信息
-            GitHubUrlInfo urlInfo = GitHubUrlParser.parse(url);
+            GitHubUrlInfo urlInfo = GitHubUrlParser.parse(decodedUrl);
             if (urlInfo == null) {
                 log.error("[Github文档加载器] 解析Github信息失败");
                 return Map.of();
