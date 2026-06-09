@@ -1,17 +1,17 @@
 package com.ftc.ftcli.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.io.FileUtil;
-import com.ftc.ftcli.common.util.doc_parser.DocParserFactory;
+import cn.hutool.core.util.StrUtil;
 import com.ftc.ftcli.common.util.doc.DocUtil;
+import com.ftc.ftcli.common.util.doc_loader.DocLoaderEnum;
+import com.ftc.ftcli.common.util.doc_loader.DocLoaderFactory;
+import com.ftc.ftcli.common.util.doc_loader.IDocLoader;
 import com.ftc.ftcli.entity.embedding.EmbeddingFileUploadPayload;
 import com.ftc.ftcli.entity.embedding.EmbeddingFileUploadResult;
 import com.ftc.ftcli.entity.embedding.EmbeddingRecordEntity;
 import com.ftc.ftcli.infra.sqlite.EmbeddingRecordRepository;
 import com.ftc.ftcli.service.AIEmbeddingService;
 import dev.langchain4j.data.document.Document;
-import dev.langchain4j.data.document.DocumentParser;
-import dev.langchain4j.data.document.loader.FileSystemDocumentLoader;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
@@ -19,10 +19,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -54,9 +50,19 @@ public class AIEmbeddingServiceImpl implements AIEmbeddingService {
 
         //1.获取文档路径
         String path = payload.getPath();
+        if(StrUtil.isBlank( path)){
+            log.error("[AI] 新增文档 文档路径不能为空");
+            return new EmbeddingFileUploadResult();
+        }
 
-        //2.加载上传文档
-        Map<String, Document> docsMap = loadDocs(path);
+        //2.通过path获取文档加载类型
+        DocLoaderEnum docLoadEnum = IDocLoader.getTypeByPath(path);
+
+        //3.通过类型获取文档加载器
+        IDocLoader docLoader = DocLoaderFactory.getDocLoader(docLoadEnum);
+
+        //4.加载文档
+        Map<String, Document> docsMap = docLoader.loadDocs(path);
         if (CollUtil.isEmpty(docsMap)) {
             log.error("[AI] 新增文档 文档不存在:[{}]", path);
             return new EmbeddingFileUploadResult();
@@ -64,24 +70,24 @@ public class AIEmbeddingServiceImpl implements AIEmbeddingService {
             log.info("[AI] 新增文档 加载文档数量:[{}]", docsMap.size());
         }
 
-        //3.获取已存在文档记录Map
+        //5.获取已存在文档记录Map
         Map<String, EmbeddingRecordEntity> existDocRecordsMap = getExistDocRecordsMap(docsMap);
 
-        //4.按是否已存在分组文档
+        //6.按是否已存在分组文档
         Map<Boolean, Map<String, Document>> partitionedDocsMap = partitionedDocsMap(existDocRecordsMap, docsMap);
 
-        //5.获取新增文档
+        //7.获取新增文档
         Map<String, Document> newDocsMap = partitionedDocsMap.getOrDefault(false, Map.of());
         log.info("[AI] 新增文档 新增文档数量:[{}]", newDocsMap.size());
 
-        //6.新增文档，写入文档记录
+        //8.新增文档，写入文档记录
         List<String> newFiles = addNewDocs(newDocsMap);
 
-        //7.获取已存在文档
+        //9.获取已存在文档
         Map<String, Document> existDocsMap = partitionedDocsMap.getOrDefault(true, Map.of());
         log.info("[AI] 新增文档 已存在文档数量:[{}]", existDocsMap.size());
 
-        //8.过滤出文档内容发生更新的文档名称MD5
+        //10.过滤出文档内容发生更新的文档名称MD5
         Set<String> updateDocsNameSet = existDocsMap.entrySet()
                 .stream()
                 .filter(entry -> DocUtil.isDocContentChange(entry, existDocRecordsMap))
@@ -89,10 +95,10 @@ public class AIEmbeddingServiceImpl implements AIEmbeddingService {
                 .collect(Collectors.toSet());
         log.info("[AI] 新增文档 文档内容更新数量:[{}]", updateDocsNameSet.size());
 
-        //9.已存在文档，如果文档内容发生更新，写入文档记录
+        //11.已存在文档，如果文档内容发生更新，写入文档记录
         List<String> updateFiles = updateChangeDocs(updateDocsNameSet, existDocsMap, existDocRecordsMap);
 
-        //10.构建结果返回
+        //12.构建结果返回
         return new EmbeddingFileUploadResult(newFiles, updateFiles);
     }
 
@@ -112,56 +118,6 @@ public class AIEmbeddingServiceImpl implements AIEmbeddingService {
 //
 //        //3.删除文档记录
 //        embeddingRecordRepository.deleteById(id);
-    }
-
-    /**
-     * 加载文档
-     *
-     * @param filePath 文档路径
-     * @return 文档名MD5-文档Map
-     */
-    private static Map<String, Document> loadDocs(String filePath) {
-
-        //1.获取文档路径
-        Path path = Paths.get(filePath);
-        File uploadFile = path.toFile();
-
-        //2.判定路径文档是否存在
-        if (!uploadFile.exists()) {
-            return Map.of();
-        }
-
-        //3.获取待加载的文件列表
-        List<File> files;
-        if (uploadFile.isDirectory()) {
-            files = FileUtil.loopFiles(uploadFile);
-        } else {
-            files = List.of(uploadFile);
-        }
-
-        //4.逐个文件按扩展名选择解析器加载
-        List<Document> documents = new ArrayList<>();
-        for (File file : files) {
-
-            //5.获取文件扩展名
-            String ext = FileUtil.extName(file);
-
-            //6.根据扩展名获取解析器
-            DocumentParser parser = DocParserFactory.getDocParser(ext);
-
-            //7.加载文档
-            Document doc = FileSystemDocumentLoader.loadDocument(file.toPath(), parser);
-
-            //8.添加文档
-            documents.add(doc);
-        }
-
-        //9.解析为文档名MD5-文档Map，返回
-        return documents.stream().collect(Collectors.toMap(
-                DocUtil::getFileNameMD5AndSetDocMetaData,
-                doc -> doc,
-                (existing, replacement) -> replacement
-        ));
     }
 
     /**

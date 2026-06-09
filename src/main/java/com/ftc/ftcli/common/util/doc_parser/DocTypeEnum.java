@@ -35,7 +35,7 @@ public enum DocTypeEnum {
     /**
      * 默认类型文档文档
      */
-    DEFAULT("text"),
+    DEFAULT("txt"),
     ;
 
     /**

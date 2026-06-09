@@ -5,7 +5,6 @@ import cn.hutool.crypto.digest.DigestUtil;
 import com.ftc.ftcli.entity.embedding.EmbeddingRecordEntity;
 import dev.langchain4j.data.document.Document;
 
-import java.io.File;
 import java.util.Map;
 
 /**
@@ -14,36 +13,6 @@ import java.util.Map;
  * @describe 文档工具类
  */
 public class DocUtil {
-
-    /**
-     * 获取文件名MD5并设置文档元数据
-     *
-     * @param doc 文档
-     * @return 文件名MD5
-     */
-    public static String getFileNameMD5AndSetDocMetaData(Document doc) {
-
-        //1.获取文件路径
-        String absoluteDirectoryPath = getAbsoluteDirectoryPath(doc);
-
-        //2.获取文件名
-        String fileName = getFileName(doc);
-
-        //3.拼接文件完整路径作为文件名，防止不同文件夹下存在同名文件
-        String fullPath = absoluteDirectoryPath + File.separator + fileName;
-
-        //4.生成MD5
-        String fileNameMD5 = DigestUtil.md5Hex(fullPath);
-
-        //5.文档设置相关元数据
-        doc.metadata().put(DocMetaDataKeyEnum.ABSOLUTE_DIRECTORY_PATH.getKey(), absoluteDirectoryPath);
-        doc.metadata().put(DocMetaDataKeyEnum.FILE_NAME.getKey(), fileName);
-        doc.metadata().put(DocMetaDataKeyEnum.FULL_PATH.getKey(), fullPath);
-        doc.metadata().put(DocMetaDataKeyEnum.FILE_NAME_MD5.getKey(), fileNameMD5);
-
-        //6.生成MD5,返回
-        return fileNameMD5;
-    }
 
     /**
      * 文档转换为EmbeddingRecordEntity
@@ -115,21 +84,6 @@ public class DocUtil {
     }
 
     /**
-     * 获取文件内容MD5
-     *
-     * @param doc 文档
-     * @return 文件内容MD5
-     */
-    public static String getFileContentMD5(Document doc) {
-
-        //1.获取文件内容
-        String text = StrUtil.isBlank(doc.text()) ? "" : doc.text().trim();
-
-        //2.获取文件内容MD5，返回
-        return DigestUtil.md5Hex(text);
-    }
-
-    /**
      * 获取文档绝对路径
      *
      * @param doc 文档
@@ -147,6 +101,31 @@ public class DocUtil {
      */
     public static String getFileName(Document doc) {
         return getStringFromMetadata(doc, DocMetaDataKeyEnum.FILE_NAME.getKey());
+    }
+
+    /**
+     * 获取文档文件名MD5
+     *
+     * @param doc 文档
+     * @return 文档文件名MD5
+     */
+    public static String getFileNameMD5(Document doc) {
+        return getStringFromMetadata(doc, DocMetaDataKeyEnum.FILE_NAME_MD5.getKey());
+    }
+
+    /**
+     * 获取文件内容MD5
+     *
+     * @param doc 文档
+     * @return 文件内容MD5
+     */
+    public static String getFileContentMD5(Document doc) {
+
+        //1.获取文件内容
+        String text = StrUtil.isBlank(doc.text()) ? "" : doc.text().trim();
+
+        //2.获取文件内容MD5，返回
+        return DigestUtil.md5Hex(text);
     }
 
     /**

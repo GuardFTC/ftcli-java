@@ -42,6 +42,12 @@ public class EmbeddingRecordEntity {
      * @return 文件完整路径
      */
     public String getFullPath() {
-        return filePath + File.separator + fileName;
+
+        //1.如果文件路径包含文件名称，直接返回路径，否则拼接返回
+        if (filePath.contains(fileName)) {
+            return filePath;
+        } else {
+            return filePath + File.separator + fileName;
+        }
     }
 }
