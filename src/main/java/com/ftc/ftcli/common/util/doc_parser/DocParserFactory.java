@@ -22,10 +22,10 @@ public class DocParserFactory {
     public static DocumentParser getDocParser(String type) {
 
         //1.获取文档类型
-        DocType docType = DocType.fromType(type);
+        DocTypeEnum docTypeEnum = DocTypeEnum.fromType(type);
 
         //2.根据文档类型获取文档解析器
-        return switch (docType) {
+        return switch (docTypeEnum) {
             case MARKDOWN -> new MarkdownDocumentParser();
             case PDF -> new ApachePdfBoxDocumentParser(true);
             case YAML, YML -> new YamlDocumentParser();

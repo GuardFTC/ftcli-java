@@ -10,7 +10,7 @@ import lombok.Getter;
  */
 @Getter
 @AllArgsConstructor
-public enum DocType {
+public enum DocTypeEnum {
 
     /**
      * markdown文档
@@ -49,12 +49,12 @@ public enum DocType {
      * @param type 类型字符串
      * @return 枚举，未匹配返回DEFAULT
      */
-    public static DocType fromType(String type) {
+    public static DocTypeEnum fromType(String type) {
 
         //1.遍历枚举，如果匹配，返回
-        for (DocType docType : values()) {
-            if (docType.getType().equalsIgnoreCase(type)) {
-                return docType;
+        for (DocTypeEnum docTypeEnum : values()) {
+            if (docTypeEnum.getType().equalsIgnoreCase(type)) {
+                return docTypeEnum;
             }
         }
 
