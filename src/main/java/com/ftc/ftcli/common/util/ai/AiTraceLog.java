@@ -23,6 +23,11 @@ public class AiTraceLog {
     private static final String PREFIX = "[AI-Trace]";
 
     /**
+     * 默认最大长度
+     */
+    private static final int DEFAULT_MAX_LENGTH = 80;
+
+    /**
      * 打印查询压缩日志
      *
      * @param query              原始查询
@@ -60,8 +65,7 @@ public class AiTraceLog {
             String source = content.textSegment().metadata().getString("file_name");
 
             //4.获取文件内容，如果内容过长，省略内容，并压缩为一行
-            String text = content.textSegment().text().replaceAll("[\\r\\n]+", " ");
-            String preview = text.length() > 80 ? text.substring(0, 80) + "..." : text;
+            String preview = compressString(content.textSegment().text(), DEFAULT_MAX_LENGTH);
 
             //5.打印日志
             log.info("{}  -来源=[{}], 内容=[{}]", PREFIX, source, preview);
@@ -85,6 +89,11 @@ public class AiTraceLog {
      * @param result   返回结果
      */
     public static void logToolResult(String toolName, String result) {
+
+        //1.压缩工具返回结果
+        result = compressString(result, DEFAULT_MAX_LENGTH);
+
+        //2.打印日志
         log.info("{} 工具返回: name=[{}], result=[{}]", PREFIX, toolName, result);
     }
 
@@ -134,5 +143,20 @@ public class AiTraceLog {
      */
     public static void logError(String message) {
         log.error("{} 异常: [{}]", PREFIX, message);
+    }
+
+    /**
+     * 压缩字符串
+     *
+     * @param content 待压缩字符串
+     * @return 压缩后的字符串
+     */
+    private static String compressString(String content, int maxLength) {
+
+        //1.删除换行符
+        String text = content.replaceAll("[\\r\\n]+", " ");
+
+        //2.如果内容过长，则进行压缩，返回
+        return text.length() > maxLength ? text.substring(0, maxLength) + "..." : text;
     }
 }
