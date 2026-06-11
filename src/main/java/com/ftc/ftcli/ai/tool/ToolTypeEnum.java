@@ -26,6 +26,11 @@ public enum ToolTypeEnum {
      * 系统工具
      */
     SYSTEM("system"),
+
+    /**
+     * 文件工具
+     */
+    FILE("file"),
     ;
 
     /**
