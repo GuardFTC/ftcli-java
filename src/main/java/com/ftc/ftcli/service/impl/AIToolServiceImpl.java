@@ -7,6 +7,7 @@ import com.ftc.ftcli.service.AIToolService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -61,6 +62,7 @@ public class AIToolServiceImpl implements AIToolService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateTool(String oldName, ToolSpecEntity entity) {
 
         //1.校验旧工具是否存在

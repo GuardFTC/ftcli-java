@@ -51,7 +51,7 @@ public class WriteFile implements IToolExecutor {
             String content = arguments.get("content").toString();
 
             //4.获取是否追加参数
-            boolean isAppend = Boolean.getBoolean(arguments.get("isAppend").toString());
+            boolean isAppend = Boolean.parseBoolean(arguments.get("isAppend").toString());
 
             //5.切分content
             List<String> lines = Arrays.asList(content.split(System.lineSeparator()));

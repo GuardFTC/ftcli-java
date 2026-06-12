@@ -37,7 +37,7 @@ public class ToolRegistry implements ApplicationRunner {
     private final ToolSpecRepository toolSpecRepository;
 
     /**
-     * 工具缓存 类型 -> (工具描述 -> 工具执行器)
+     * 工具缓存 工具描述 -> 工具执行器提供者
      */
     private static final ConcurrentHashMap<ToolSpecification, IToolExecutor> TOOL_CACHE = new ConcurrentHashMap<>();
 
