@@ -12,21 +12,6 @@ spring:
   config:
     import: optional:classpath:application-local.yaml
 
-  #Redis配置
-  data:
-    redis:
-      host: ${FTCLI_REDIS_HOST:localhost}
-      port: ${FTCLI_REDIS_PORT:6379}
-      password: ${FTCLI_REDIS_PASSWORD:}
-      database: ${FTCLI_REDIS_DB:1}
-      jedis:
-        pool:
-          max-active: 150
-          max-wait: 100
-          max-idle: 100
-          min-idle: 50
-      timeout: 5000ms
-
   #SQLite数据源配置
   datasource:
     url: jdbc:sqlite:${FTCLI_DB_PATH:${user.home}/.ftcli/ftcli.db}

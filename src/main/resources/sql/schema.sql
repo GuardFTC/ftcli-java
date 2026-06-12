@@ -35,3 +35,14 @@ CREATE TABLE IF NOT EXISTS embedding_record
 
 -- 文件名MD5唯一索引，防止同一文件重复录入
 CREATE UNIQUE INDEX IF NOT EXISTS idx_embedding_record_name_md5 ON embedding_record(file_name_md5);
+
+-- 聊天记录表
+CREATE TABLE IF NOT EXISTS chat_memory
+(
+    id           INTEGER primary key autoincrement,
+    memory_id    TEXT not null,
+    chat_message TEXT not null
+);
+
+-- 聊天记录表索引
+CREATE UNIQUE INDEX IF NOT EXISTS idx_chat_memory_id_md5 on chat_memory (memory_id);

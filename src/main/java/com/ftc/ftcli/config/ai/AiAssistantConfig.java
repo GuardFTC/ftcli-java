@@ -2,7 +2,7 @@ package com.ftc.ftcli.config.ai;
 
 import com.ftc.ftcli.ai.assistant.LocalAiService;
 import com.ftc.ftcli.ai.assistant.WebAiService;
-import com.ftc.ftcli.infra.redis.RedisChatMemoryStore;
+import com.ftc.ftcli.ai.store.SqliteChatMemoryStore;
 import com.ftc.ftcli.properties.chat.ChatMemoryProperties;
 import dev.langchain4j.memory.chat.TokenWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
@@ -35,9 +35,7 @@ public class AiAssistantConfig {
 
     private final StreamingChatModel streamingModel;
 
-    private final ChatMemoryProperties chatMemoryProperties;
-
-    private final RedisChatMemoryStore redisChatMemoryStore;
+    private final SqliteChatMemoryStore chatMemoryStore;
 
     private final ToolProvider toolProvider;
 
@@ -49,6 +47,8 @@ public class AiAssistantConfig {
 
     public final ContentInjector contentInjector;
 
+    private final ChatMemoryProperties chatMemoryProperties;
+
     @Bean
     public WebAiService webAiService() {
         return AiServices.builder(WebAiService.class)
@@ -57,7 +57,7 @@ public class AiAssistantConfig {
                 .chatMemoryProvider(memoryId -> TokenWindowChatMemory.builder()
                         .id(memoryId)
                         .maxTokens(chatMemoryProperties.getMaxTokens(), new OpenAiTokenCountEstimator(chatMemoryProperties.getTokenEstimatorModel()))
-                        .chatMemoryStore(redisChatMemoryStore)
+                        .chatMemoryStore(chatMemoryStore)
                         .build())
                 .toolProvider(toolProvider)
                 .retrievalAugmentor(DefaultRetrievalAugmentor.builder()
@@ -75,7 +75,7 @@ public class AiAssistantConfig {
                 .chatMemoryProvider(memoryId -> TokenWindowChatMemory.builder()
                         .id(memoryId)
                         .maxTokens(chatMemoryProperties.getMaxTokens(), new OpenAiTokenCountEstimator(chatMemoryProperties.getTokenEstimatorModel()))
-                        .chatMemoryStore(redisChatMemoryStore)
+                        .chatMemoryStore(chatMemoryStore)
                         .build())
                 .toolProvider(toolProvider)
                 .retrievalAugmentor(DefaultRetrievalAugmentor.builder()
