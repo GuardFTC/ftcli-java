@@ -26,10 +26,6 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class RunShell implements IToolExecutor {
 
-    public static void main(String[] args) {
-        System.out.println(System.getProperty("user.home"));
-    }
-
     @Override
     public String getName() {
         return Introspector.decapitalize(this.getClass().getSimpleName());
