@@ -14,6 +14,7 @@ import dev.langchain4j.rag.query.router.QueryRouter;
 import dev.langchain4j.rag.query.transformer.QueryTransformer;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolProvider;
+import dev.langchain4j.skills.Skills;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -49,6 +50,8 @@ public class AiAssistantConfig {
 
     private final ChatMemoryProperties chatMemoryProperties;
 
+    private final Skills skills;
+
     @Bean
     public WebAiService webAiService() {
         return AiServices.builder(WebAiService.class)
@@ -59,7 +62,7 @@ public class AiAssistantConfig {
                         .maxTokens(chatMemoryProperties.getMaxTokens(), new OpenAiTokenCountEstimator(chatMemoryProperties.getTokenEstimatorModel()))
                         .chatMemoryStore(chatMemoryStore)
                         .build())
-                .toolProvider(toolProvider)
+                .toolProviders(toolProvider, skills.toolProvider())
                 .retrievalAugmentor(DefaultRetrievalAugmentor.builder()
                         .queryTransformer(queryTransformer)
                         .queryRouter(webAiQueryRouter)
@@ -77,7 +80,7 @@ public class AiAssistantConfig {
                         .maxTokens(chatMemoryProperties.getMaxTokens(), new OpenAiTokenCountEstimator(chatMemoryProperties.getTokenEstimatorModel()))
                         .chatMemoryStore(chatMemoryStore)
                         .build())
-                .toolProvider(toolProvider)
+                .toolProviders(toolProvider, skills.toolProvider())
                 .retrievalAugmentor(DefaultRetrievalAugmentor.builder()
                         .queryTransformer(queryTransformer)
                         .queryRouter(localAiQueryRouter)
