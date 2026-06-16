@@ -30,7 +30,12 @@ public enum DocMetaDataKeyEnum {
     /**
      * 文档文件名MD5
      */
-    FILE_NAME_MD5("file_name_md5");
+    FILE_NAME_MD5("file_name_md5"),
+
+    /**
+     * 文档类型(用于区分特殊文档，如书签)
+     */
+    DOC_TYPE("doc_type");
 
     /**
      * 文档元数据Key

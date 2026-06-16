@@ -6,6 +6,7 @@ import cn.hutool.core.util.StrUtil;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.rag.content.Content;
+import dev.langchain4j.rag.content.ContentMetadata;
 import dev.langchain4j.rag.query.Query;
 import lombok.extern.slf4j.Slf4j;
 
@@ -71,11 +72,15 @@ public class AiTraceLog {
             //4.获取文件内容，如果内容过长，省略内容，并压缩为一行
             String preview = compressString(content.textSegment().text(), DEFAULT_MAX_LENGTH);
 
-            //5.打印日志
+            //5.获取向量检索分数，并格式化
+            Object scoreObj = content.metadata().get(ContentMetadata.SCORE);
+            String score = scoreObj == null ? "-" : String.format("%.4f", ((Number) scoreObj).doubleValue());
+
+            //6.打印日志
             if (StrUtil.isBlank(source)) {
-                log.info("{}  -内容=[{}]", PREFIX, preview);
+                log.info("{}  -score=[{}], 内容=[{}]", PREFIX, score, preview);
             } else {
-                log.info("{}  -来源=[{}], 内容=[{}]", PREFIX, source, preview);
+                log.info("{}  -score=[{}], 来源=[{}], 内容=[{}]", PREFIX, score, source, preview);
             }
         }
     }
@@ -87,37 +92,41 @@ public class AiTraceLog {
      * @param segments   原始文档片段
      * @param scores     评分结果
      * @param maxResults 最大返回结果数
+     * @param minScore   最小分数
      */
-    public static void logRerank(String queryText, List<TextSegment> segments, List<Double> scores, Integer maxResults) {
+    public static void logRerank(String queryText, List<TextSegment> segments, List<Double> scores, Integer maxResults, Double minScore) {
 
-        //1.打印重排查询
-        log.info("{} 重排序: query=[{}], 检索文档数=[{}], 结果文档数=[{}]", PREFIX, compressString(queryText, DEFAULT_MAX_LENGTH), segments.size(), maxResults);
-
-        //2.定义轻量级数据结构record
+        //1.定义轻量级数据结构record
         record Scored(int index, double score) {
         }
 
-        //3.将文档索引，以及文档分数封装到record集合
+        //2.将文档索引，以及文档分数封装到record集合
         List<Scored> sorted = new ArrayList<>();
         for (int i = 0; i < scores.size(); i++) {
             sorted.add(new Scored(i, scores.get(i)));
         }
 
-        //4.按照分数从高到低排序
+        //3.按照分数从高到低排序
         sorted.sort((a, b) -> Double.compare(b.score, a.score));
+
+        //4.过滤掉低于最小分数的文档
+        sorted = sorted.stream().filter(scored -> scored.score >= minScore).toList();
 
         //5.截取 最大返回结果数 个文档
         sorted = CollUtil.sub(sorted, 0, maxResults);
 
-        //6.打印选中文档
+        //6.打印重排查询
+        log.info("{} 重排序: query=[{}], 检索文档数=[{}], 结果文档数=[{}]", PREFIX, compressString(queryText, DEFAULT_MAX_LENGTH), segments.size(), sorted.size());
+
+        //7.打印选中文档
         for (int rank = 0; rank < sorted.size(); rank++) {
 
-            //7.获取文档分数，文档来源，文档内容缩写
+            //8.获取文档分数，文档来源，文档内容缩写
             Scored score = sorted.get(rank);
             String source = segments.get(score.index).metadata().getString("file_name");
             String preview = compressString(segments.get(score.index).text(), DEFAULT_MAX_LENGTH);
 
-            //8.打印日志
+            //9.打印日志
             log.info("{}  -[{}] score=[{}], 来源=[{}], 内容=[{}]", PREFIX, rank + 1, String.format("%.4f", score.score), source, preview);
         }
     }

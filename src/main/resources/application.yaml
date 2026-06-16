@@ -76,4 +76,4 @@ ai:
     rerank:
       model: jina-reranker-v3
       max-results: 3
-      min-score:
+      min-score: 0.08

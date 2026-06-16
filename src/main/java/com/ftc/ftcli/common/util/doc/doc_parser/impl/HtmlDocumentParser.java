@@ -1,7 +1,9 @@
 package com.ftc.ftcli.common.util.doc.doc_parser.impl;
 
+import com.ftc.ftcli.common.enums.doc.DocMetaDataKeyEnum;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentParser;
+import dev.langchain4j.data.document.Metadata;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -18,6 +20,11 @@ import java.util.Deque;
  */
 public class HtmlDocumentParser implements DocumentParser {
 
+    /**
+     * 书签文档类型标识值
+     */
+    public static final String DOC_TYPE_BOOKMARK = "bookmark";
+
     @Override
     public Document parse(InputStream inputStream) {
 
@@ -33,16 +40,14 @@ public class HtmlDocumentParser implements DocumentParser {
         String title = htmlDoc.title();
         boolean isBookmark = "Bookmarks".equalsIgnoreCase(title) || "书签".equals(title);
 
-        //3.根据类型选择不同解析策略
-        String text;
+        //3.书签文件：解析为结构化文本，并打上书签类型标记（供入库时按行切分）
         if (isBookmark) {
-            text = parseBookmark(htmlDoc);
-        } else {
-            text = parseGenericHtml(htmlDoc);
+            String text = parseBookmark(htmlDoc);
+            return Document.from(text, Metadata.from(DocMetaDataKeyEnum.DOC_TYPE.getKey(), DOC_TYPE_BOOKMARK));
         }
 
-        //4.构建Document返回
-        return Document.from(text);
+        //4.通用HTML：提取正文文本返回
+        return Document.from(parseGenericHtml(htmlDoc));
     }
 
     /**
