@@ -4,7 +4,7 @@
 
 ## 项目简介
 
-**ftcli** 是一个基于 Spring Boot 的 AI 助手服务，为 Go 编写的命令行客户端（[go-ftc-console](../../../go/src/go-ftc-console)）提供 AI 能力后端。项目以 [LangChain4j](https://github.com/langchain4j/langchain4j) 为核心，整合了：
+**ftcli** 是一个基于 Spring Boot 的 AI 助手服务，为 Go 编写的命令行客户端（[go-ftc-console](https://github.com/GuardFTC/ftc-cli)）提供 AI 能力后端。项目以 [LangChain4j](https://github.com/langchain4j/langchain4j) 为核心，整合了：
 
 - **大模型对话**：支持同步与 SSE 流式响应（DeepSeek Chat）
 - **RAG 知识库**：支持本地文件、URL、GitHub 链接多来源文档的向量检索问答（含 Rerank 重排）
