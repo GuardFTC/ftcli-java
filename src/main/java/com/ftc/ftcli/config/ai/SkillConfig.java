@@ -1,20 +1,17 @@
 package com.ftc.ftcli.config.ai;
 
-import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.util.IdUtil;
-import cn.hutool.core.util.ReUtil;
+import cn.hutool.core.io.resource.ResourceUtil;
 import cn.hutool.core.util.StrUtil;
-import dev.langchain4j.skills.FileSystemSkill;
-import dev.langchain4j.skills.FileSystemSkillLoader;
+import com.ftc.ftcli.entity.skill.SkillEntity;
+import com.ftc.ftcli.service.AISkillService;
+import dev.langchain4j.skills.Skill;
 import dev.langchain4j.skills.Skills;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
-import java.io.File;
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -24,39 +21,49 @@ import java.util.List;
  */
 @Slf4j
 @Configuration
+@RequiredArgsConstructor
 public class SkillConfig {
 
+    private final AISkillService aiSkillService;
+
     @Bean
-    public Skills skills() throws IOException {
+    public Skills skills() {
 
-        //1.扫描 classpath 下所有 skills/*/SKILL.md
-        Resource[] resources = new PathMatchingResourcePatternResolver().getResources("classpath:skills/*/SKILL.md");
+        //1.查询Skill列表
+        List<SkillEntity> skillBeans = aiSkillService.getSkills();
 
-        //2.一行代码创建动态唯一的临时目录（带 UUID 绝对防止多线程/重名冲突）
-        File tempSkillsDir = FileUtil.mkdir(FileUtil.getTmpDir() + "/ftcli-skills-" + IdUtil.fastSimpleUUID());
+        //2.定义最终加载Skill集合
+        List<Skill> skills = new ArrayList<>();
 
-        //3.遍历并复制
-        for (Resource resource : resources) {
+        //3.遍历Skill列表
+        for (SkillEntity skillBean : skillBeans) {
 
-            //4.获取Skill名称
-            String skillName = ReUtil.get("skills/([^/]+)/SKILL.md$", resource.getURL().toString(), 1);
-            if (StrUtil.isBlank(skillName)) {
+            //4.获取内容,如果内容为空,从文件中获取
+            String content = StrUtil.isNotBlank(skillBean.getSkillMdContent()) ?
+                    skillBean.getSkillMdContent() :
+                    ResourceUtil.readUtf8Str(skillBean.getSkillMdPath());
+
+            //5.如果内容为空，跳过
+            if (StrUtil.isBlank(content)) {
+                log.warn("[Skill] 加载失败,无法获取到内容: [{}]", skillBean.getSkillName());
                 continue;
             }
 
-            //5.复制Skill文件到临时目录
-            File targetFile = FileUtil.file(tempSkillsDir, skillName, "SKILL.md");
-            FileUtil.writeFromStream(resource.getInputStream(), targetFile);
+            //6.创建 Skill
+            Skill skill = Skill.builder()
+                    .name(skillBean.getSkillName())
+                    .description(skillBean.getSkillDescription())
+                    .content(content)
+                    .build();
+
+            //7.存入集合
+            skills.add(skill);
         }
 
-        //6.从临时目录加载全部 Skill
-        List<FileSystemSkill> skillList = FileSystemSkillLoader.loadSkills(tempSkillsDir.toPath());
-        log.info("[Skills] 加载完成, 共[{}]个 Skill", skillList.size());
+        //8.打印日志
+        log.info("[Skill] 加载完成,共[{}]个技能", skills.size());
 
-        //7.注册 JVM 退出时自动清理临时目录（从watch dog的角度保证不留垃圾）
-        FileUtil.del(tempSkillsDir);
-
-        //8.创建 Skills
-        return Skills.from(skillList);
+        //9.创建 Skills
+        return Skills.from(skills);
     }
 }
