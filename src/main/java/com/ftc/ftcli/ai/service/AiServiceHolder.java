@@ -73,7 +73,7 @@ public class AiServiceHolder {
         Skills skills = aiSkillService.loadSkills();
 
         //2.构建WebAiService
-        String webSystemMessage = buildSystemMessage("prompt/web-service.markdown", skills);
+        String webSystemMessage = buildSystemMessage("prompt/web-service.md", skills);
         this.webAiService = AiServices.builder(WebAiService.class)
                 .chatModel(model)
                 .streamingChatModel(streamingModel)
@@ -91,7 +91,7 @@ public class AiServiceHolder {
                 .build();
 
         //3.构建LocalAiService
-        String localSystemMessage = buildSystemMessage("prompt/local-service.markdown", skills);
+        String localSystemMessage = buildSystemMessage("prompt/local-service.md", skills);
         this.localAiService = AiServices.builder(LocalAiService.class)
                 .chatModel(model)
                 .streamingChatModel(streamingModel)
