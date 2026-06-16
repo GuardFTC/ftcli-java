@@ -34,4 +34,11 @@ public interface AIEmbeddingService {
      * @param id 文档ID
      */
     void remove(Long id);
+
+    /**
+     * 获取向量记录数
+     *
+     * @return 向量记录数
+     */
+    int getVectorCount();
 }

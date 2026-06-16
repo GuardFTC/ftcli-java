@@ -2,6 +2,10 @@ package com.ftc.ftcli.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import com.ftc.ftcli.common.enums.doc.DocLoaderEnum;
 import com.ftc.ftcli.common.enums.doc.DocMetaDataKeyEnum;
 import com.ftc.ftcli.common.util.doc.DocUtil;
@@ -11,6 +15,7 @@ import com.ftc.ftcli.entity.embedding.EmbeddingFileUploadPayload;
 import com.ftc.ftcli.entity.embedding.EmbeddingFileUploadResult;
 import com.ftc.ftcli.entity.embedding.EmbeddingRecordEntity;
 import com.ftc.ftcli.infra.sqlite.EmbeddingRecordRepository;
+import com.ftc.ftcli.properties.embedding.EmbeddingStoreProperties;
 import com.ftc.ftcli.service.AIEmbeddingService;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.segment.TextSegment;
@@ -43,6 +48,8 @@ public class AIEmbeddingServiceImpl implements AIEmbeddingService {
     private final EmbeddingStore<TextSegment> embeddingStore;
 
     private final EmbeddingRecordRepository embeddingRecordRepository;
+
+    private final EmbeddingStoreProperties chromaProperties;
 
     @Override
     public List<EmbeddingRecordEntity> getDocs() {
@@ -122,6 +129,59 @@ public class AIEmbeddingServiceImpl implements AIEmbeddingService {
 
         //3.删除文档记录
         embeddingRecordRepository.deleteById(id);
+    }
+
+    @Override
+    public int getVectorCount() {
+
+        //1.定义查询集合列表URL
+        String collectionsUrl = chromaProperties.getUrl()
+                + "/api/v2/tenants/"
+                + chromaProperties.getTenant()
+                + "/databases/"
+                + chromaProperties.getDatabase()
+                + "/collections";
+        try {
+
+            //2.查询集合列表
+            String collectionsResp = HttpUtil.get(collectionsUrl);
+            JSONArray collections = JSON.parseArray(collectionsResp);
+
+            //3.查找目标集合ID
+            String collectionId = null;
+            for (int i = 0; i < collections.size(); i++) {
+                JSONObject coll = collections.getJSONObject(i);
+                if (chromaProperties.getCollection().equals(coll.getString("name"))) {
+                    collectionId = coll.getString("id");
+                    break;
+                }
+            }
+
+            //4.如果未找到集合，返回0
+            if (collectionId == null) {
+                log.warn("[AI] 查询向量记录数 未找到集合:[{}]", chromaProperties.getCollection());
+                return 0;
+            }
+
+            //5.定义查询集合记录数URL
+            String countUrl = chromaProperties.getUrl()
+                    + "/api/v2/tenants/"
+                    + chromaProperties.getTenant()
+                    + "/databases/"
+                    + chromaProperties.getDatabase()
+                    + "/collections/"
+                    + collectionId
+                    + "/count";
+
+            //6.查询集合记录数
+            String countResp = cn.hutool.http.HttpUtil.get(countUrl);
+
+            //7.解析返回
+            return Integer.parseInt(countResp.trim());
+        } catch (Exception e) {
+            log.error("[AI] 查询向量记录数失败", e);
+            return 0;
+        }
     }
 
     /**

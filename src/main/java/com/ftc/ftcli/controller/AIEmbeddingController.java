@@ -67,4 +67,16 @@ public class AIEmbeddingController {
         //3.返回
         return RestfulResult.Success.removeData();
     }
+
+    @GetMapping("vectors/count")
+    @Operation(summary = "查询向量记录数")
+    public RestfulResult<Integer> getVectorCount() {
+
+        //1.查询向量记录数
+        int count = aiEmbeddingService.getVectorCount();
+        log.info("[AI] 查询向量记录数 出参:[{}]", count);
+
+        //2.返回
+        return RestfulResult.Success.getOrUpdateData(count);
+    }
 }

@@ -88,6 +88,10 @@
             <div class="stat-num" id="statPaths">0</div>
             <div class="stat-label">来源目录数</div>
         </div>
+        <div class="stat-card">
+            <div class="stat-num" id="statVectors">-</div>
+            <div class="stat-label">向量记录数</div>
+        </div>
     </div>
 
     <!-- 搜索与排序 -->
@@ -144,8 +148,20 @@ async function loadDocs() {
         allDocs = result.data || [];
         updateStats();
         filterDocs();
+        await loadVectorCount();
     } catch (e) {
         showToast('加载文档失败: ' + e.message, 'error');
+    }
+}
+
+// 加载向量记录数
+async function loadVectorCount() {
+    try {
+        const resp = await fetch('/api/rest/v1/ai/embedding/vectors/count');
+        const result = await resp.json();
+        document.getElementById('statVectors').textContent = result.data != null ? result.data : '-';
+    } catch (e) {
+        document.getElementById('statVectors').textContent = '-';
     }
 }
 
