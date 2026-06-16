@@ -17,3 +17,5 @@ ai:
   rag:
     web-search:
       api-key: ${TAVILY_API_KEY:}
+    rerank:
+      api-key: ${JINA_API_KEY:}

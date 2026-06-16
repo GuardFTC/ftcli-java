@@ -68,3 +68,5 @@ ai:
       max-segment-size: 1500
       overlap: 200
       token-estimator-model: gpt-4o
+    rerank:
+      model: jina-reranker-v3

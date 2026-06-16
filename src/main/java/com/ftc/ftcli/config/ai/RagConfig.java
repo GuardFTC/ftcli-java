@@ -3,14 +3,17 @@ package com.ftc.ftcli.config.ai;
 import com.ftc.ftcli.common.enums.doc.DocMetaDataKeyEnum;
 import com.ftc.ftcli.common.util.ai.AiTraceLog;
 import com.ftc.ftcli.properties.rag.RagIngestorProperties;
+import com.ftc.ftcli.properties.rag.RerankProperties;
 import com.ftc.ftcli.properties.rag.WebSearchProperties;
 import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.jina.JinaScoringModel;
 import dev.langchain4j.model.openai.OpenAiTokenCountEstimator;
 import dev.langchain4j.rag.content.Content;
+import dev.langchain4j.rag.content.aggregator.ReRankingContentAggregator;
 import dev.langchain4j.rag.content.injector.ContentInjector;
 import dev.langchain4j.rag.content.injector.DefaultContentInjector;
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
@@ -43,7 +46,7 @@ import static java.util.Arrays.asList;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
-@EnableConfigurationProperties({WebSearchProperties.class, RagIngestorProperties.class})
+@EnableConfigurationProperties({WebSearchProperties.class, RagIngestorProperties.class, RerankProperties.class})
 public class RagConfig {
 
     private final ChatModel model;
@@ -55,6 +58,8 @@ public class RagConfig {
     private final WebSearchProperties webSearchProperties;
 
     private final RagIngestorProperties ingestorProperties;
+
+    private final RerankProperties rerankProperties;
 
     @Bean
     public EmbeddingStoreIngestor ingestor() {
@@ -155,6 +160,22 @@ public class RagConfig {
                         DocMetaDataKeyEnum.FILE_NAME.getKey(),
                         DocMetaDataKeyEnum.FULL_PATH.getKey()
                 ))
+                .build();
+    }
+
+    @Bean
+    public ReRankingContentAggregator contentAggregator() {
+
+        //1.创建Jina评分模型
+        JinaScoringModel scoringModel = JinaScoringModel.builder()
+                .apiKey(rerankProperties.getApiKey())
+                .modelName(rerankProperties.getModel())
+                .build();
+
+        //2.定义内容聚合器，基于重排模型进行文档二次过滤
+        return ReRankingContentAggregator.builder()
+                .scoringModel(scoringModel)
+                .minScore(0.8)
                 .build();
     }
 }
