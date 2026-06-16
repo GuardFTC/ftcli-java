@@ -46,3 +46,18 @@ CREATE TABLE IF NOT EXISTS chat_memory
 
 -- 聊天记录表索引
 CREATE UNIQUE INDEX IF NOT EXISTS idx_chat_memory_id_md5 on chat_memory (memory_id);
+
+-- SKILL表
+CREATE TABLE IF NOT EXISTS skill
+(
+    id                INTEGER PRIMARY KEY AUTOINCREMENT,
+    skill_name        TEXT NOT NULL,
+    skill_description TEXT NOT NULL,
+    skill_md_content  TEXT NOT NULL,
+    skill_md_path     TEXT NOT NULL,
+    created_at        TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    updated_at        TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+
+-- SKILL名称唯一索引，防止同一SKILL重复录入
+CREATE UNIQUE INDEX IF NOT EXISTS idx_skill_name ON skill (skill_name);
