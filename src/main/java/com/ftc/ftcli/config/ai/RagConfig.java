@@ -118,9 +118,23 @@ public class RagConfig {
                 .maxResults(webSearchProperties.getMaxResults())
                 .build();
 
-        //3.使用LLM路由：由模型自行判断用户问题是否需要联网检索，替代正则匹配
+        //3.包装检索器，添加追踪日志
+        ContentRetriever tracedRetriever = query -> {
+
+            //4.检索
+            List<Content> contents = webSearchContentRetriever.retrieve(query);
+
+            //5.打印检索日志
+            AiTraceLog.logRetrievalQuery(query.text());
+            AiTraceLog.logRetrievalResults(contents);
+
+            //6.返回文档
+            return contents;
+        };
+
+        //7.使用LLM路由：由模型自行判断用户问题是否需要联网检索，替代正则匹配
         return new LanguageModelQueryRouter(model, Map.of(
-                webSearchContentRetriever, "用于查询实时信息、最新新闻、时事热点、技术框架最新版本、产品价格、赛事结果等需要联网获取的动态内容。不要用于回答编程概念、语法规则、设计模式等稳定的知识性问题。"
+                tracedRetriever, "用于查询实时信息、最新新闻、时事热点、技术框架最新版本、产品价格、赛事结果等需要联网获取的动态内容。不要用于回答编程概念、语法规则、设计模式等稳定的知识性问题。"
         ));
     }
 

@@ -2,6 +2,7 @@ package com.ftc.ftcli.common.util.ai;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.StrUtil;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.rag.content.Content;
@@ -71,7 +72,11 @@ public class AiTraceLog {
             String preview = compressString(content.textSegment().text(), DEFAULT_MAX_LENGTH);
 
             //5.打印日志
-            log.info("{}  -来源=[{}], 内容=[{}]", PREFIX, source, preview);
+            if (StrUtil.isBlank(source)) {
+                log.info("{}  -内容=[{}]", PREFIX, preview);
+            } else {
+                log.info("{}  -来源=[{}], 内容=[{}]", PREFIX, source, preview);
+            }
         }
     }
 
@@ -110,7 +115,7 @@ public class AiTraceLog {
             //7.获取文档分数，文档来源，文档内容缩写
             Scored score = sorted.get(rank);
             String source = segments.get(score.index).metadata().getString("file_name");
-            String preview = compressString(segments.get(score.index).text(), 60);
+            String preview = compressString(segments.get(score.index).text(), DEFAULT_MAX_LENGTH);
 
             //8.打印日志
             log.info("{}  -[{}] score=[{}], 来源=[{}], 内容=[{}]", PREFIX, rank + 1, String.format("%.4f", score.score), source, preview);
