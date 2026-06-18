@@ -64,7 +64,7 @@ ai:
         database: langchain4j_db
         collection: langchain4j_coll
     ingestor:
-      max-segment-size: 1500
+      max-segment-size: 2000
       overlap: 200
       token-estimator-model: gpt-4o
   rag:

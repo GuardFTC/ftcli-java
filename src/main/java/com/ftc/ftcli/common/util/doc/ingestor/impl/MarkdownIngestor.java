@@ -3,14 +3,18 @@ package com.ftc.ftcli.common.util.doc.ingestor.impl;
 import cn.hutool.core.util.StrUtil;
 import com.ftc.ftcli.common.enums.doc.DocIngestorTypeEnum;
 import com.ftc.ftcli.common.util.doc.ingestor.IIngestor;
+import com.ftc.ftcli.properties.embedding.IngestorProperties;
 import com.vladsch.flexmark.ast.Heading;
 import com.vladsch.flexmark.parser.Parser;
 import com.vladsch.flexmark.util.ast.Node;
 import dev.langchain4j.data.document.Document;
+import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.document.Metadata;
+import dev.langchain4j.data.document.splitter.DocumentSplitters;
 import dev.langchain4j.data.segment.TextSegment;
+import dev.langchain4j.model.TokenCountEstimator;
+import dev.langchain4j.model.openai.OpenAiTokenCountEstimator;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import java.util.*;
 
@@ -21,6 +25,26 @@ import java.util.*;
  */
 @Component
 public class MarkdownIngestor implements IIngestor {
+
+    /**
+     * RAG文档入库器配置属性
+     */
+    private final IngestorProperties ingestorProperties;
+
+    /**
+     * Token计数估算器
+     */
+    private final TokenCountEstimator tokenCountEstimator;
+
+    /**
+     * 构造方法
+     *
+     * @param ingestorProperties RAG文档入库器配置属性
+     */
+    public MarkdownIngestor(IngestorProperties ingestorProperties) {
+        this.ingestorProperties = ingestorProperties;
+        this.tokenCountEstimator = new OpenAiTokenCountEstimator(ingestorProperties.getTokenEstimatorModel());
+    }
 
     /**
      * Markdown解析器
@@ -76,11 +100,11 @@ public class MarkdownIngestor implements IIngestor {
                 //说明上一个底层结构结束了，此时再收割上一个 Chunk
                 if (hasActualContent(currentContent)) {
 
-                    //9.创建TextSegment
-                    TextSegment segment = createSegment(currentHeaders, currentContent.toString(), document.metadata());
+                    //9.创建TextSegment集合（内容过长时按token二次切分）
+                    List<TextSegment> headingSegments = createSegments(currentHeaders, currentContent.toString(), document.metadata());
 
                     //10.写入结果集
-                    segments.add(segment);
+                    segments.addAll(headingSegments);
 
                     //11.清空缓冲区
                     currentContent.setLength(0);
@@ -101,10 +125,10 @@ public class MarkdownIngestor implements IIngestor {
             node = node.getNext();
         }
 
-        //15.处理最后一个节点，如果有实际内容，则创建一个TextSegment
+        //15.处理最后一个节点，如果有实际内容，则创建TextSegment集合
         if (hasActualContent(currentContent)) {
-            TextSegment segment = createSegment(currentHeaders, currentContent.toString(), document.metadata());
-            segments.add(segment);
+            List<TextSegment> headingSegments = createSegments(currentHeaders, currentContent.toString(), document.metadata());
+            segments.addAll(headingSegments);
         }
 
         //16.返回结果集
@@ -123,17 +147,20 @@ public class MarkdownIngestor implements IIngestor {
 
 
     /**
-     * 创建TextSegment
+     * 创建TextSegment集合
+     * <p>
+     * 默认按最低级标题生成单个片段；若标题下内容过长（拼接归属前缀后超过最大token限制），
+     * 则按最大token对正文进行递归二次切分（带重叠，保证语义连贯），并为每个子片段重新拼接相同的归属上下文
      *
      * @param headers     标题树
      * @param bodyContent 内容
      * @param docMetadata 文档元数据
-     * @return TextSegment
+     * @return TextSegment集合
      */
-    private TextSegment createSegment(Map<Integer, String> headers, String bodyContent, Metadata docMetadata) {
+    private List<TextSegment> createSegments(Map<Integer, String> headers, String bodyContent, Metadata docMetadata) {
 
-        //1.定义当前TextSegment文本Builder
-        StringBuilder segmentTextBuilder = new StringBuilder();
+        //1.定义结果集
+        List<TextSegment> segments = new ArrayList<>();
 
         //2.拼接标题文字 示例：一级标题 > 二级标题 > 三级标题
         List<String> activeHeaders = new ArrayList<>();
@@ -151,29 +178,44 @@ public class MarkdownIngestor implements IIngestor {
         //5.动态计算并组装“归属”信息
         String belongingInfo = getBelongingInfo(cleanFileName, activeHeaders);
 
-        //6.拼接格式化标题文本
-        if (StringUtils.hasText(belongingInfo)) {
-            segmentTextBuilder
-                    .append("- 归属: ")
-                    .append(belongingInfo)
-                    .append(System.lineSeparator())
-                    .append(System.lineSeparator());
+        //6.构建归属前缀文本（每个片段均需携带，保证标题上下文不丢失）
+        String prefix = StrUtil.EMPTY;
+        if (StrUtil.isNotBlank(belongingInfo)) {
+            prefix = "- 归属: " + belongingInfo + System.lineSeparator() + System.lineSeparator();
         }
 
-        //7.拼接具体内容文本
-        segmentTextBuilder.append(bodyContent.trim());
+        //7.整理正文内容
+        String trimmedBody = bodyContent.trim();
 
-        //8.写入原文档元数据
-        Metadata segmentMetadata = new Metadata();
-        if (docMetadata != null) {
-            docMetadata.toMap().forEach((key, value) -> segmentMetadata.put(key, value.toString()));
+        //8.构建片段元数据（标题树 + 文档元数据）
+        Metadata segmentMetadata = buildSegmentMetadata(headers, docMetadata);
+
+        //9.计算归属前缀token数，并推导正文可用的最大token（预留前缀空间，确保最终片段不超限）
+        int bodySize = tokenCountEstimator.estimateTokenCountInText(trimmedBody);
+        int prefixTokens = tokenCountEstimator.estimateTokenCountInText(prefix);
+        int effectiveMaxSize = ingestorProperties.getMaxSegmentSize() - prefixTokens;
+
+        //10.判断正文是否超长
+        //如果未超长，直接生成单个片段
+        //如果超长，按最大token对正文进行递归二次切分
+        if (bodySize <= effectiveMaxSize) {
+
+            //11.正文未超长，生成单个片段
+            segments.add(buildSegment(prefix, trimmedBody, segmentMetadata));
+        } else {
+
+            //12.正文超长，按token递归切分（带重叠，保证语义连贯）
+            DocumentSplitter splitter = DocumentSplitters.recursive(effectiveMaxSize, ingestorProperties.getOverlap(), tokenCountEstimator);
+            List<TextSegment> subSegments = splitter.split(Document.from(trimmedBody));
+
+            //13.为每个子片段重新拼接相同的归属前缀，并复用相同的元数据
+            for (TextSegment subSegment : subSegments) {
+                segments.add(buildSegment(prefix, subSegment.text().trim(), segmentMetadata.copy()));
+            }
         }
 
-        //9.写入标题元数据
-        headers.forEach((level, text) -> segmentMetadata.put("header_l" + level, text));
-
-        //10.生成TextSegment，返回
-        return TextSegment.from(segmentTextBuilder.toString().trim(), segmentMetadata);
+        //14.返回结果集
+        return segments;
     }
 
     /**
@@ -232,9 +274,50 @@ public class MarkdownIngestor implements IIngestor {
         //如果文件名有效，标题树不为空，则返回文件名 + 标题树
         //否则，返回文件名
         if (!activeHeaders.isEmpty()) {
-            return cleanFileName + "-" + String.join(" > ", activeHeaders);
+            return cleanFileName + " > " + String.join(" > ", activeHeaders);
         } else {
             return cleanFileName;
         }
+    }
+
+    /**
+     * 构建片段元数据（写入文档元数据与标题树元数据）
+     *
+     * @param headers     标题树
+     * @param docMetadata 文档元数据
+     * @return 片段元数据
+     */
+    private Metadata buildSegmentMetadata(Map<Integer, String> headers, Metadata docMetadata) {
+
+        //1.定义片段元数据
+        Metadata segmentMetadata = new Metadata();
+
+        //2.写入原文档元数据
+        if (docMetadata != null) {
+            docMetadata.toMap().forEach((key, value) -> segmentMetadata.put(key, value.toString()));
+        }
+
+        //3.写入标题元数据
+        headers.forEach((level, text) -> segmentMetadata.put("header_l" + level, text));
+
+        //4.返回片段元数据
+        return segmentMetadata;
+    }
+
+    /**
+     * 拼接归属前缀与正文，生成单个TextSegment
+     *
+     * @param prefix          归属前缀
+     * @param bodyContent     正文内容
+     * @param segmentMetadata 片段元数据
+     * @return TextSegment
+     */
+    private TextSegment buildSegment(String prefix, String bodyContent, Metadata segmentMetadata) {
+
+        //1.拼接归属前缀与正文
+        String segmentText = prefix + bodyContent;
+
+        //2.生成TextSegment，返回
+        return TextSegment.from(segmentText.trim(), segmentMetadata);
     }
 }
