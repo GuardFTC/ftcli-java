@@ -2,10 +2,10 @@ package com.ftc.ftcli.common.util.doc.doc_parser;
 
 import com.ftc.ftcli.common.enums.doc.DocParserTypeEnum;
 import com.ftc.ftcli.common.util.doc.doc_parser.impl.HtmlDocumentParser;
+import com.ftc.ftcli.common.util.doc.doc_parser.impl.MarkdownDocumentParser;
 import dev.langchain4j.data.document.DocumentParser;
 import dev.langchain4j.data.document.parser.TextDocumentParser;
 import dev.langchain4j.data.document.parser.apache.pdfbox.ApachePdfBoxDocumentParser;
-import dev.langchain4j.data.document.parser.markdown.MarkdownDocumentParser;
 import dev.langchain4j.data.document.parser.yaml.YamlDocumentParser;
 
 /**
@@ -29,10 +29,10 @@ public class DocParserFactory {
         //2.根据文档类型获取文档解析器
         return switch (docParserTypeEnum) {
             case MARKDOWN -> new MarkdownDocumentParser();
+            case HTML -> new HtmlDocumentParser();
             case PDF -> new ApachePdfBoxDocumentParser(true);
             case YAML, YML -> new YamlDocumentParser();
             case TXT -> new TextDocumentParser();
-            case HTML -> new HtmlDocumentParser();
             default -> null;
         };
     }

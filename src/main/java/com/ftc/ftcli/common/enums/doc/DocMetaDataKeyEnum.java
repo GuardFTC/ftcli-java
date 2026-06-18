@@ -33,9 +33,9 @@ public enum DocMetaDataKeyEnum {
     FILE_NAME_MD5("file_name_md5"),
 
     /**
-     * 文档类型(用于区分特殊文档，如书签)
+     * 文档切分器类型 (用于标识需要特殊切分规则的文档)
      */
-    DOC_TYPE("doc_type");
+    INGESTOR_TYPE("ingestor_type");
 
     /**
      * 文档元数据Key

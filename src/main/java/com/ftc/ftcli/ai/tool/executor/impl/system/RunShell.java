@@ -93,7 +93,7 @@ public class RunShell implements IToolExecutor {
             StringBuilder stdout = new StringBuilder();
             Thread stdoutReader = new Thread(() -> {
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), charset))) {
-                    reader.lines().forEach(line -> stdout.append(line).append("\n"));
+                    reader.lines().forEach(line -> stdout.append(line).append(System.lineSeparator()));
                 } catch (IOException e) {
                     log.error("[AI工具]-执行Shell命令:[{}] 读取stdout异常", command, e);
                 }
@@ -103,7 +103,7 @@ public class RunShell implements IToolExecutor {
             StringBuilder stderr = new StringBuilder();
             Thread stderrReader = new Thread(() -> {
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream(), charset))) {
-                    reader.lines().forEach(line -> stderr.append(line).append("\n"));
+                    reader.lines().forEach(line -> stderr.append(line).append(System.lineSeparator()));
                 } catch (IOException e) {
                     log.error("[AI工具]-执行Shell命令:[{}] 读取stderr异常", command, e);
                 }
