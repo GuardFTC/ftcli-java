@@ -1,5 +1,6 @@
 package com.ftc.ftcli.common.util.doc.ingestor.impl;
 
+import cn.hutool.core.util.StrUtil;
 import com.ftc.ftcli.common.enums.doc.DocIngestorTypeEnum;
 import com.ftc.ftcli.common.util.doc.ingestor.IIngestor;
 import dev.langchain4j.data.document.Document;
@@ -33,13 +34,23 @@ public class BookmarkIngestor implements IIngestor {
 
         //3.遍历每行，非空行生成独立片段(携带文档元数据)
         for (String line : lines) {
+
+            //4.移除空白字符
             String trimmed = line.trim();
             if (!trimmed.isEmpty()) {
-                segments.add(TextSegment.from(trimmed, document.metadata().copy()));
+
+                //5.根据&切分
+                String segmentContent = String.join(System.lineSeparator(), StrUtil.split(trimmed, "&"));
+
+                //6.创建segment
+                TextSegment segment = TextSegment.from(segmentContent, document.metadata().copy());
+
+                //7.存入片段集合
+                segments.add(segment);
             }
         }
 
-        //4.返回
+        //8.返回
         return segments;
     }
 }

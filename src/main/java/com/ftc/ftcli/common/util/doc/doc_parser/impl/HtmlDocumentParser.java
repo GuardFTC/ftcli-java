@@ -1,5 +1,6 @@
 package com.ftc.ftcli.common.util.doc.doc_parser.impl;
 
+import cn.hutool.core.util.StrUtil;
 import com.ftc.ftcli.common.enums.doc.DocIngestorTypeEnum;
 import com.ftc.ftcli.common.enums.doc.DocMetaDataKeyEnum;
 import dev.langchain4j.data.document.Document;
@@ -95,10 +96,11 @@ public class HtmlDocumentParser implements DocumentParser {
                 String folderPath = String.join(" > ", folderStack);
 
                 //12.写入结构化文本
-                if (!folderPath.isEmpty()) {
-                    result.append("[").append(folderPath).append("] ");
+                result.append("- 书签: [").append(linkTitle).append("](").append(url).append(")");
+                if (StrUtil.isNotBlank(folderPath)) {
+                    result.append("&");
+                    result.append("- 分类: ").append(folderPath).append(System.lineSeparator());
                 }
-                result.append(linkTitle).append(" - ").append(url).append(System.lineSeparator());
             }
         }
 
