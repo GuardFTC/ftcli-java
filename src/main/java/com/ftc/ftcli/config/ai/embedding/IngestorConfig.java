@@ -47,7 +47,7 @@ public class IngestorConfig {
         //2.定义复合切分器: 专用切分器走专门的切分规则，其余文档走通用规则
         DocumentSplitter splitter = document -> {
 
-            //3.获取文档类型元数据
+            //3.获取文档切分器类型
             String ingestorType = document.metadata().getString(DocMetaDataKeyEnum.INGESTOR_TYPE.getKey());
 
             //4.获取文档切分器
