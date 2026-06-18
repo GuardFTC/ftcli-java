@@ -1,5 +1,6 @@
 package com.ftc.ftcli.common.util.doc.ingestor.impl;
 
+import cn.hutool.core.util.StrUtil;
 import com.ftc.ftcli.common.enums.doc.DocIngestorTypeEnum;
 import com.ftc.ftcli.common.util.doc.ingestor.IIngestor;
 import com.vladsch.flexmark.ast.Heading;
@@ -9,11 +10,9 @@ import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.segment.TextSegment;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author 冯铁城 [17615007230@163.com]
@@ -32,6 +31,13 @@ public class MarkdownIngestor implements IIngestor {
      * Markdown最大标题等级
      */
     private static final Integer MAX_MD_HEADING_LEVEL = 6;
+
+    /**
+     * 过滤无意义文件名的黑名单集合（全小写匹配）
+     */
+    private static final Set<String> IGNORE_FILE_NAMES = Set.of(
+            "readme", "index", "todo", "untitled"
+    );
 
     @Override
     public String getDocIngestorType() {
@@ -139,26 +145,96 @@ public class MarkdownIngestor implements IIngestor {
             }
         }
 
-        //4.拼接格式化标题文本
-        segmentTextBuilder
-                .append("- 归属: ")
-                .append(String.join(" > ", activeHeaders))
-                .append(System.lineSeparator())
-                .append(System.lineSeparator());
+        //4.获取干净且有意义的文件名作为顶级上下文
+        String cleanFileName = getCleanFileName(docMetadata);
 
-        //5.拼接具体内容文本
+        //5.动态计算并组装“归属”信息
+        String belongingInfo = getBelongingInfo(cleanFileName, activeHeaders);
+
+        //6.拼接格式化标题文本
+        if (StringUtils.hasText(belongingInfo)) {
+            segmentTextBuilder
+                    .append("- 归属: ")
+                    .append(belongingInfo)
+                    .append(System.lineSeparator())
+                    .append(System.lineSeparator());
+        }
+
+        //7.拼接具体内容文本
         segmentTextBuilder.append(bodyContent.trim());
 
-        //6.写入原文档元数据
+        //8.写入原文档元数据
         Metadata segmentMetadata = new Metadata();
         if (docMetadata != null) {
             docMetadata.toMap().forEach((key, value) -> segmentMetadata.put(key, value.toString()));
         }
 
-        //7.写入标题元数据
+        //9.写入标题元数据
         headers.forEach((level, text) -> segmentMetadata.put("header_l" + level, text));
 
-        //8.生成TextSegment，返回
+        //10.生成TextSegment，返回
         return TextSegment.from(segmentTextBuilder.toString().trim(), segmentMetadata);
+    }
+
+    /**
+     * 从元数据中提取并清洗文件名，过滤无意义名称
+     *
+     * @param docMetadata 文档元数据
+     * @return 清洗后的有效文件名，若无效则返回空字符串
+     */
+    private String getCleanFileName(Metadata docMetadata) {
+
+        //1.如果元数据为空，则返回空字符串
+        if (docMetadata == null) {
+            return StrUtil.EMPTY;
+        }
+
+        //2.获取文件名
+        String fileName = docMetadata.getString("file_name");
+        if (StrUtil.isBlank(fileName)) {
+            return StrUtil.EMPTY;
+        }
+
+        //3.剥离文件扩展名（如 .md, .markdown）
+        fileName = StrUtil.subBefore(fileName, StrUtil.DOT, true);
+        fileName = fileName.trim();
+
+        //4.黑名单校验，如果属于无意义名称，直接剔除归属上下文
+        if (IGNORE_FILE_NAMES.contains(fileName.toLowerCase())) {
+            return StrUtil.EMPTY;
+        }
+
+        //5.返回文件名
+        return fileName;
+    }
+
+    /**
+     * 获取归属信息
+     *
+     * @param cleanFileName 清洗后的文件名
+     * @param activeHeaders 激活的标题树
+     * @return 归属信息
+     */
+    private static String getBelongingInfo(String cleanFileName, List<String> activeHeaders) {
+
+        //1.如果文件名无效
+        //标题树不为空，则返回标题树
+        //否则，返回空字符串 TODO 后续改为调用LLM提取正文总结
+        if (StrUtil.isBlank(cleanFileName)) {
+            if (!activeHeaders.isEmpty()) {
+                return String.join(" > ", activeHeaders);
+            } else {
+                return StrUtil.EMPTY;
+            }
+        }
+
+        //2.在文件名有效的前提下，判定标题树是否为空
+        //如果文件名有效，标题树不为空，则返回文件名 + 标题树
+        //否则，返回文件名
+        if (!activeHeaders.isEmpty()) {
+            return cleanFileName + "-" + String.join(" > ", activeHeaders);
+        } else {
+            return cleanFileName;
+        }
     }
 }
