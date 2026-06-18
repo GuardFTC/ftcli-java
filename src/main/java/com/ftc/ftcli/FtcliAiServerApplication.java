@@ -9,9 +9,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @describe 启动类
  */
 @SpringBootApplication
-public class FtcliApplication {
+public class FtcliAiServerApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(FtcliApplication.class, args);
+        SpringApplication.run(FtcliAiServerApplication.class, args);
     }
 }

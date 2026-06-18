@@ -10,10 +10,10 @@
     </parent>
 
     <groupId>com.ftc</groupId>
-    <artifactId>ftcli</artifactId>
+    <artifactId>ftcli-ai-server</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>ftcli</name>
-    <description>ftc自己的命令行工具</description>
+    <name>ftcli-ai-server</name>
+    <description>ftcli ai指令 server</description>
 
     <properties>
         <java.version>21</java.version>

@@ -1,10 +1,10 @@
-# ftcli
+# ftcli-ai-server
 
 > FTC 个人 AI 命令行助手后端服务 —— 基于 LangChain4j 的大模型对话、RAG 知识库问答、Skill 技能系统与动态工具调用平台。
 
 ## 项目简介
 
-**ftcli** 是一个基于 Spring Boot 的 AI 助手服务，为 Go 编写的命令行客户端（[go-ftc-console](https://github.com/GuardFTC/ftc-cli)）提供 AI 能力后端。项目以 [LangChain4j](https://github.com/langchain4j/langchain4j) 为核心，整合了：
+**ftcli-ai-server** 是一个基于 Spring Boot 的 AI 助手服务，为 Go 编写的命令行客户端（[ftcli](https://github.com/GuardFTC/ftc-cli)）提供 AI 能力后端。项目以 [LangChain4j](https://github.com/langchain4j/langchain4j) 为核心，整合了：
 
 - **大模型对话**：支持同步与 SSE 流式响应（DeepSeek Chat）
 - **RAG 知识库**：支持本地文件、URL、GitHub 链接多来源文档的向量检索问答（含 Rerank 重排）
@@ -405,7 +405,7 @@ curl -X POST http://localhost:6680/api/rest/v1/ai/skills ^
 ## 项目结构
 
 ```
-ftcli/
+ftcli-ai-server/
 ├── pom.xml
 └── src/main/
     ├── java/com/ftc/ftcli/

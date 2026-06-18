@@ -7,7 +7,7 @@ spring:
 
   #应用配置
   application:
-    name: ftcli
+    name: ftcli-ai-server
 
   config:
     import: optional:classpath:application-local.yaml
