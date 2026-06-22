@@ -5,6 +5,7 @@ import com.ftc.ftcli.entity.embedding.EmbeddingFileUploadResult;
 import com.ftc.ftcli.entity.embedding.EmbeddingRecordEntity;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author 冯铁城 [17615007230@163.com]
@@ -41,4 +42,14 @@ public interface AIEmbeddingService {
      * @return 向量记录数
      */
     int getVectorCount();
+
+    /**
+     * 获取文档片段列表
+     *
+     * @param id     文档ID
+     * @param page   页码(从1开始)
+     * @param size   每页条数
+     * @return 文档片段分页结果
+     */
+    Map<String, Object> getChunks(Long id, int page, int size);
 }

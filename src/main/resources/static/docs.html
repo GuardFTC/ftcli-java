@@ -72,6 +72,35 @@
         .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
         .btn-cancel { background: #fff; border: 1px solid #d9d9d9; color: #666; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-size: 14px; }
         .btn-cancel:hover { border-color: #999; }
+
+        /* 查看片段按钮 */
+        .btn-chunks { background: none; border: 1px solid #1890ff; color: #1890ff; padding: 4px 14px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .btn-chunks:hover { background: #1890ff; color: #fff; }
+
+        /* 片段模态框 */
+        .chunks-modal { width: 720px; max-height: 80vh; display: flex; flex-direction: column; }
+        .chunks-modal h2 { font-size: 16px; color: #1a1a1a; margin-bottom: 4px; }
+        .chunks-modal .modal-subtitle { font-size: 12px; color: #999; margin-bottom: 16px; }
+        .chunks-body { flex: 1; overflow-y: auto; min-height: 200px; }
+        .chunk-item { border: 1px solid #f0f0f0; border-radius: 6px; margin-bottom: 8px; transition: border-color 0.15s; }
+        .chunk-item:hover { border-color: #d9d9d9; }
+        .chunk-summary { padding: 12px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        .chunk-index { font-size: 12px; color: #999; font-weight: 500; flex-shrink: 0; width: 32px; }
+        .chunk-preview { font-size: 13px; color: #333; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chunk-expand-icon { font-size: 12px; color: #bbb; flex-shrink: 0; transition: transform 0.2s; }
+        .chunk-item.expanded .chunk-expand-icon { transform: rotate(90deg); }
+        .chunk-detail { display: none; padding: 0 16px 14px; }
+        .chunk-item.expanded .chunk-detail { display: block; }
+        .chunk-fulltext { background: #1e1e1e; border-radius: 4px; padding: 12px; font-size: 13px; line-height: 1.6; color: #d4d4d4; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; font-family: 'Menlo', 'Consolas', monospace; }
+        .chunk-meta { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+        .chunk-meta-tag { font-size: 11px; background: #f0f5ff; color: #1890ff; padding: 2px 8px; border-radius: 3px; }
+        .chunks-pagination { display: flex; justify-content: space-between; align-items: center; padding-top: 14px; border-top: 1px solid #f0f0f0; margin-top: 12px; }
+        .chunks-page-info { font-size: 12px; color: #999; }
+        .chunks-page-btns { display: flex; gap: 6px; }
+        .chunks-page-btns button { padding: 4px 10px; border: 1px solid #d9d9d9; border-radius: 4px; cursor: pointer; font-size: 12px; background: #fff; }
+        .chunks-page-btns button:hover { border-color: #1890ff; color: #1890ff; }
+        .chunks-page-btns button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .chunks-loading { text-align: center; padding: 40px; color: #999; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -128,6 +157,27 @@
         <div class="modal-actions">
             <button class="btn-cancel" onclick="closeDeleteModal()">取消</button>
             <button class="btn-delete" style="margin:0;padding:8px 20px;font-size:14px;" onclick="confirmDelete()">确认删除</button>
+        </div>
+    </div>
+</div>
+
+<!-- 文档片段弹窗 -->
+<div class="modal-overlay" id="chunksModal">
+    <div class="modal chunks-modal">
+        <h2 id="chunksTitle">文档片段</h2>
+        <div class="modal-subtitle" id="chunksSubtitle"></div>
+        <div class="chunks-body" id="chunksBody">
+            <div class="chunks-loading">加载中...</div>
+        </div>
+        <div class="chunks-pagination" id="chunksPagination" style="display:none;">
+            <div class="chunks-page-info" id="chunksPageInfo"></div>
+            <div class="chunks-page-btns">
+                <button onclick="chunksGoPage(chunksCurrentPage-1)" id="chunksPrevBtn">上一页</button>
+                <button onclick="chunksGoPage(chunksCurrentPage+1)" id="chunksNextBtn">下一页</button>
+            </div>
+        </div>
+        <div class="modal-actions" style="margin-top:12px;">
+            <button class="btn-cancel" onclick="closeChunksModal()">关闭</button>
         </div>
     </div>
 </div>
@@ -269,6 +319,7 @@ function renderDocCard(doc) {
                     </div>
                 </div>
                 <div class="doc-actions">
+                    <button class="btn-chunks" onclick="event.stopPropagation(); openChunksModal(${doc.id}, '${doc.fileName}')">查看片段</button>
                     <button class="btn-delete" onclick="event.stopPropagation(); deleteDoc(${doc.id}, '${doc.fileName}')">删除此文档</button>
                 </div>
             </div>
@@ -372,6 +423,138 @@ function showToast(msg, type) {
 
 // 初始化
 loadDocs();
+
+// ==================== 文档片段功能 ====================
+
+const CHUNKS_PAGE_SIZE = 10;
+let chunksCurrentPage = 1;
+let chunksTotal = 0;
+let chunksDocId = null;
+let chunksDocName = '';
+
+// 忽略的元数据Key（文档级信息，已在外层展示）
+const IGNORED_META_KEYS = new Set([
+    'file_name', 'file_name_md5', 'file_content_md5',
+    'absolute_directory_path', 'full_path'
+]);
+
+// 打开片段弹窗
+function openChunksModal(docId, fileName) {
+    chunksDocId = docId;
+    chunksDocName = fileName;
+    chunksCurrentPage = 1;
+    document.getElementById('chunksTitle').textContent = '文档片段';
+    document.getElementById('chunksSubtitle').textContent = fileName;
+    document.getElementById('chunksBody').innerHTML = '<div class="chunks-loading">加载中...</div>';
+    document.getElementById('chunksPagination').style.display = 'none';
+    document.getElementById('chunksModal').classList.add('active');
+    loadChunks();
+}
+
+// 关闭片段弹窗
+function closeChunksModal() {
+    document.getElementById('chunksModal').classList.remove('active');
+    chunksDocId = null;
+}
+
+// 加载片段数据
+async function loadChunks() {
+    try {
+        const resp = await fetch(API_BASE + '/' + chunksDocId + '/chunks?page=' + chunksCurrentPage + '&size=' + CHUNKS_PAGE_SIZE);
+        const result = await resp.json();
+        const data = result.data || {};
+        chunksTotal = data.total || 0;
+        const chunks = data.chunks || [];
+        renderChunks(chunks);
+    } catch (e) {
+        document.getElementById('chunksBody').innerHTML = '<div class="chunks-loading">加载失败: ' + e.message + '</div>';
+    }
+}
+
+// 渲染片段列表
+function renderChunks(chunks) {
+    if (chunks.length === 0) {
+        document.getElementById('chunksBody').innerHTML = '<div class="chunks-loading">暂无片段数据</div>';
+        document.getElementById('chunksPagination').style.display = 'none';
+        return;
+    }
+
+    const startIdx = (chunksCurrentPage - 1) * CHUNKS_PAGE_SIZE;
+    let html = '';
+    chunks.forEach((chunk, i) => {
+        const idx = startIdx + i + 1;
+        const preview = chunk.document ? chunk.document.substring(0, 80).replace(/\n/g, ' ') : '';
+        const fullText = chunk.document || '';
+        const metaTags = renderChunkMeta(chunk.metadata);
+
+        html += '<div class="chunk-item" onclick="toggleChunkDetail(this)">';
+        html += '  <div class="chunk-summary">';
+        html += '    <span class="chunk-index">#' + idx + '</span>';
+        html += '    <span class="chunk-preview">' + escapeHtml(preview) + (chunk.document && chunk.document.length > 80 ? '...' : '') + '</span>';
+        html += '    <span class="chunk-expand-icon">▶</span>';
+        html += '  </div>';
+        html += '  <div class="chunk-detail">';
+        html += '    <div class="chunk-fulltext">' + escapeHtml(fullText) + '</div>';
+        if (metaTags) {
+            html += '    <div class="chunk-meta">' + metaTags + '</div>';
+        }
+        html += '  </div>';
+        html += '</div>';
+    });
+
+    document.getElementById('chunksBody').innerHTML = html;
+    renderChunksPagination();
+}
+
+// 渲染片段元数据标签（过滤掉文档级重复信息）
+function renderChunkMeta(metadata) {
+    if (!metadata) return '';
+    let tags = '';
+    for (const [key, value] of Object.entries(metadata)) {
+        if (IGNORED_META_KEYS.has(key)) continue;
+        if (value === null || value === '') continue;
+        tags += '<span class="chunk-meta-tag">' + escapeHtml(key) + ' = ' + escapeHtml(String(value)) + '</span>';
+    }
+    return tags;
+}
+
+// 渲染片段分页
+function renderChunksPagination() {
+    const totalPages = Math.max(1, Math.ceil(chunksTotal / CHUNKS_PAGE_SIZE));
+    if (totalPages <= 1 && chunksTotal <= CHUNKS_PAGE_SIZE) {
+        document.getElementById('chunksPagination').style.display = chunksTotal > 0 ? 'flex' : 'none';
+        document.getElementById('chunksPageInfo').textContent = '共 ' + chunksTotal + ' 条';
+        document.getElementById('chunksPrevBtn').disabled = true;
+        document.getElementById('chunksNextBtn').disabled = true;
+        return;
+    }
+
+    document.getElementById('chunksPagination').style.display = 'flex';
+    document.getElementById('chunksPageInfo').textContent = '第 ' + chunksCurrentPage + '/' + totalPages + ' 页，共 ' + chunksTotal + ' 条';
+    document.getElementById('chunksPrevBtn').disabled = chunksCurrentPage <= 1;
+    document.getElementById('chunksNextBtn').disabled = chunksCurrentPage >= totalPages;
+}
+
+// 片段翻页
+function chunksGoPage(page) {
+    const totalPages = Math.max(1, Math.ceil(chunksTotal / CHUNKS_PAGE_SIZE));
+    if (page < 1 || page > totalPages) return;
+    chunksCurrentPage = page;
+    document.getElementById('chunksBody').innerHTML = '<div class="chunks-loading">加载中...</div>';
+    loadChunks();
+}
+
+// 展开/收起片段详情
+function toggleChunkDetail(item) {
+    item.classList.toggle('expanded');
+}
+
+// HTML转义
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 </script>
 </body>
 </html>

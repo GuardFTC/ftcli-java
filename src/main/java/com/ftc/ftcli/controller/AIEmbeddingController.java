@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author 冯铁城 [17615007230@163.com]
@@ -78,5 +79,20 @@ public class AIEmbeddingController {
 
         //2.返回
         return RestfulResult.Success.getOrUpdateData(count);
+    }
+
+    @GetMapping("docs/{id}/chunks")
+    @Operation(summary = "查询文档片段")
+    public RestfulResult<Map<String, Object>> getChunks(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        //1.查询文档片段
+        Map<String, Object> chunks = aiEmbeddingService.getChunks(id, page, size);
+        log.info("[AI] 查询文档片段 文档ID:[{}] page:[{}] size:[{}] total:[{}]", id, page, size, chunks.get("total"));
+
+        //2.返回
+        return RestfulResult.Success.getOrUpdateData(chunks);
     }
 }

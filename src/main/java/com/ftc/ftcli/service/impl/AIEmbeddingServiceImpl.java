@@ -184,6 +184,152 @@ public class AIEmbeddingServiceImpl implements AIEmbeddingService {
         }
     }
 
+    @Override
+    public Map<String, Object> getChunks(Long id, int page, int size) {
+
+        //1.查询文档记录
+        EmbeddingRecordEntity docRecord = embeddingRecordRepository.findById(id);
+        if (null == docRecord) {
+            log.error("[AI] 查询文档片段 文档不存在:[{}]", id);
+            return Map.of("total", 0, "chunks", List.of());
+        }
+
+        //2.获取文件名MD5
+        String fileNameMd5 = docRecord.getFileNameMd5();
+
+        //3.获取集合ID
+        String collectionId = getCollectionId();
+        if (StrUtil.isBlank(collectionId)) {
+            return Map.of("total", 0, "chunks", List.of());
+        }
+
+        try {
+
+            //4.先查询该文档的总片段数
+            int total = getChunkCount(collectionId, fileNameMd5);
+
+            //5.计算分页偏移量
+            int offset = (page - 1) * size;
+
+            //6.构建Chroma查询请求体
+            JSONObject requestBody = new JSONObject();
+            JSONObject where = new JSONObject();
+            where.put("file_name_md5", fileNameMd5);
+            requestBody.put("where", where);
+            requestBody.put("include", List.of("documents", "metadatas"));
+            requestBody.put("limit", size);
+            requestBody.put("offset", offset);
+
+            //7.定义查询URL
+            String getUrl = chromaProperties.getUrl()
+                    + "/api/v2/tenants/"
+                    + chromaProperties.getTenant()
+                    + "/databases/"
+                    + chromaProperties.getDatabase()
+                    + "/collections/"
+                    + collectionId
+                    + "/get";
+
+            //8.发起请求
+            String resp = HttpUtil.post(getUrl, requestBody.toJSONString());
+            JSONObject result = JSON.parseObject(resp);
+
+            //9.解析片段列表
+            JSONArray ids = result.getJSONArray("ids");
+            JSONArray documents = result.getJSONArray("documents");
+            JSONArray metadatas = result.getJSONArray("metadatas");
+
+            //10.组装片段数据
+            List<Map<String, Object>> chunks = new java.util.ArrayList<>();
+            for (int i = 0; i < ids.size(); i++) {
+                Map<String, Object> chunk = new java.util.LinkedHashMap<>();
+                chunk.put("id", ids.getString(i));
+                chunk.put("document", documents.getString(i));
+                chunk.put("metadata", metadatas.getJSONObject(i));
+                chunks.add(chunk);
+            }
+
+            //11.返回分页结果
+            return Map.of("total", total, "chunks", chunks);
+        } catch (Exception e) {
+            log.error("[AI] 查询文档片段失败 文档ID:[{}]", id, e);
+            return Map.of("total", 0, "chunks", List.of());
+        }
+    }
+
+    /**
+     * 获取Chroma集合ID
+     *
+     * @return 集合ID，未找到返回null
+     */
+    private String getCollectionId() {
+
+        //1.定义查询集合列表URL
+        String collectionsUrl = chromaProperties.getUrl()
+                + "/api/v2/tenants/"
+                + chromaProperties.getTenant()
+                + "/databases/"
+                + chromaProperties.getDatabase()
+                + "/collections";
+
+        try {
+
+            //2.查询集合列表
+            String collectionsResp = HttpUtil.get(collectionsUrl);
+            JSONArray collections = JSON.parseArray(collectionsResp);
+
+            //3.查找目标集合ID
+            for (int i = 0; i < collections.size(); i++) {
+                JSONObject coll = collections.getJSONObject(i);
+                if (chromaProperties.getCollection().equals(coll.getString("name"))) {
+                    return coll.getString("id");
+                }
+            }
+
+            //4.未找到集合
+            log.warn("[AI] 未找到Chroma集合:[{}]", chromaProperties.getCollection());
+            return null;
+        } catch (Exception e) {
+            log.error("[AI] 获取Chroma集合ID失败", e);
+            return null;
+        }
+    }
+
+    /**
+     * 获取指定文档的片段总数
+     *
+     * @param collectionId 集合ID
+     * @param fileNameMd5  文件名MD5
+     * @return 片段总数
+     */
+    private int getChunkCount(String collectionId, String fileNameMd5) {
+
+        //1.构建计数请求体（不限制数量，只取ID用于计数）
+        JSONObject requestBody = new JSONObject();
+        JSONObject where = new JSONObject();
+        where.put("file_name_md5", fileNameMd5);
+        requestBody.put("where", where);
+        requestBody.put("include", List.of());
+
+        //2.定义查询URL
+        String getUrl = chromaProperties.getUrl()
+                + "/api/v2/tenants/"
+                + chromaProperties.getTenant()
+                + "/databases/"
+                + chromaProperties.getDatabase()
+                + "/collections/"
+                + collectionId
+                + "/get";
+
+        //3.发起请求
+        String resp = HttpUtil.post(getUrl, requestBody.toJSONString());
+        JSONObject result = JSON.parseObject(resp);
+
+        //4.解析ID数组长度作为总数
+        JSONArray ids = result.getJSONArray("ids");
+        return ids != null ? ids.size() : 0;
+    }
+
     /**
      * 获取已存在文档记录Map
      *
