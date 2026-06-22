@@ -21,6 +21,11 @@ public enum DocIngestorTypeEnum {
      * 书签文档切分器
      */
     BOOKMARK("bookmark"),
+
+    /**
+     * 通用文档切分器
+     */
+    UNIVERSAL("universal"),
     ;
 
     /**

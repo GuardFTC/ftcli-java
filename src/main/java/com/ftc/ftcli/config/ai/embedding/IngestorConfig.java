@@ -5,10 +5,8 @@ import com.ftc.ftcli.common.util.doc.ingestor.DocIngestorFactory;
 import com.ftc.ftcli.common.util.doc.ingestor.IIngestor;
 import com.ftc.ftcli.properties.embedding.IngestorProperties;
 import dev.langchain4j.data.document.DocumentSplitter;
-import dev.langchain4j.data.document.splitter.DocumentSplitters;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
-import dev.langchain4j.model.openai.OpenAiTokenCountEstimator;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import lombok.RequiredArgsConstructor;
@@ -32,37 +30,23 @@ public class IngestorConfig {
 
     private final EmbeddingStore<TextSegment> embeddingStore;
 
-    private final IngestorProperties ingestorProperties;
-
     @Bean
     public EmbeddingStoreIngestor ingestor() {
 
-        //1.定义通用文档切分规则
-        DocumentSplitter recursiveSplitter = DocumentSplitters.recursive(
-                ingestorProperties.getMaxSegmentSize(),
-                ingestorProperties.getOverlap(),
-                new OpenAiTokenCountEstimator(ingestorProperties.getTokenEstimatorModel())
-        );
-
-        //2.定义复合切分器: 专用切分器走专门的切分规则，其余文档走通用规则
+        //1.定义复合切分器: 专用切分器走专门的切分规则，其余文档走通用规则
         DocumentSplitter splitter = document -> {
 
-            //3.获取文档切分器类型
+            //2.获取文档切分器类型
             String ingestorType = document.metadata().getString(DocMetaDataKeyEnum.INGESTOR_TYPE.getKey());
 
-            //4.获取文档切分器
+            //3.获取文档切分器
             IIngestor docIngestor = DocIngestorFactory.getDocIngestor(ingestorType);
 
-            //5.如果不为空，使用专属切分器
-            if (null != docIngestor) {
-                return docIngestor.split(document);
-            }
-
-            //6.为空，使用通用切分器
-            return recursiveSplitter.split(document);
+            //4.切分文档
+            return docIngestor.split(document);
         };
 
-        //7.创建入库器，返回
+        //5.创建入库器，返回
         return EmbeddingStoreIngestor.builder()
                 .documentSplitter(splitter)
                 .embeddingModel(embeddingModel)

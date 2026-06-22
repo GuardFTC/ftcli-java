@@ -1,6 +1,8 @@
 package com.ftc.ftcli.common.util.doc.ingestor;
 
-import cn.hutool.core.util.StrUtil;
+import com.ftc.ftcli.common.enums.doc.DocIngestorTypeEnum;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -14,7 +16,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * @date 2026-06-09 15:15:29
  * @describe 文档切分器工厂
  */
+@Slf4j
 @Component
+@RequiredArgsConstructor
 public class DocIngestorFactory implements ApplicationContextAware {
 
     /**
@@ -30,14 +34,19 @@ public class DocIngestorFactory implements ApplicationContextAware {
      */
     public static IIngestor getDocIngestor(String type) {
 
-        //1.为空直接返回
-        if (StrUtil.isBlank(type)) {
-            return null;
+        //1.获取文档切分器
+        IIngestor docIngestor = DOC_INGESTOR_MAP.get(type);
+
+        //2.如果为空，返回默认文档切分器
+        if (null == docIngestor) {
+            log.warn("[文档切分器工厂] 通过类型:[{}] 未获取到对应的文档切分器，返回通用文档切分器", type);
+            docIngestor = DOC_INGESTOR_MAP.get(DocIngestorTypeEnum.UNIVERSAL.getType());
         }
 
-        //2.获取文档切分器,返回
-        return DOC_INGESTOR_MAP.get(type);
+        //3.不为空，返回特定的文档切分器
+        return docIngestor;
     }
+
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
